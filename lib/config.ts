@@ -1,6 +1,7 @@
 import randUserAgent from '@/utils/rand-user-agent';
 import 'dotenv/config';
 import { ofetch } from 'ofetch';
+import { CookieCloudQuery, cookieCloudQuery, createCookieCloudSyncJob } from '@/utils/cookie-cloud';
 
 let envs = process.env;
 
@@ -76,6 +77,12 @@ export type Config = {
     };
     suffix?: string;
     titleLengthLimit: number;
+    cookieCloud: {
+        host?: string;
+        uuid?: string;
+        password?: string;
+        updateCron: string;
+    };
     openai: {
         apiKey?: string;
         model?: string;
@@ -192,7 +199,7 @@ export type Config = {
         password?: string;
     };
     javdb: {
-        session?: string;
+        session: CookieCloudQuery;
     };
     keylol: {
         cookie?: string;
@@ -493,6 +500,12 @@ const calculateValue = () => {
         },
         suffix: envs.SUFFIX,
         titleLengthLimit: toInt(envs.TITLE_LENGTH_LIMIT, 150),
+        cookieCloud: {
+            host: envs.COOKIE_CLOUD_HOST,
+            uuid: envs.COOKIE_CLOUD_UUID,
+            password: envs.COOKIE_CLOUD_PASSWORD,
+            updateCron: envs.COOKIE_CLOUD_UPDATE_CRON || '0 2 * * *',
+        },
         openai: {
             apiKey: envs.OPENAI_API_KEY,
             model: envs.OPENAI_MODEL || 'gpt-3.5-turbo-16k',
@@ -610,7 +623,12 @@ const calculateValue = () => {
             password: envs.IWARA_PASSWORD,
         },
         javdb: {
-            session: envs.JAVDB_SESSION,
+            session: cookieCloudQuery({
+                domain: 'javdb.com',
+                name: '_jdb_session',
+                path: '/',
+                default_value: envs.JAVDB_SESSION,
+            }),
         },
         keylol: {
             cookie: envs.KEYLOL_COOKIE,
@@ -800,6 +818,8 @@ const calculateValue = () => {
     for (const name in _value) {
         value[name] = _value[name];
     }
+
+    createCookieCloudSyncJob(_value.cookieCloud);
 };
 calculateValue();
 
