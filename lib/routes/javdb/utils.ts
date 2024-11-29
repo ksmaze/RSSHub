@@ -3,12 +3,15 @@ import got from '@/utils/got';
 import { load } from 'cheerio';
 import { parseDate } from '@/utils/parse-date';
 import { config } from '@/config';
-import { Cookie, CookieJar } from 'tough-cookie';
 
 import ConfigNotFoundError from '@/errors/types/config-not-found';
+import { manager } from '@/utils/cookie-cloud';
+import { DataItem } from '@/types';
+
 const allowDomain = new Set(['javdb.com', 'javdb36.com', 'javdb007.com', 'javdb521.com']);
 
 const ProcessItems = async (ctx, currentUrl, title) => {
+    await manager.initial(config.cookieCloud);
     const domain = ctx.req.query('domain') ?? 'javdb.com';
     const url = new URL(currentUrl, `https://${domain}`);
     if (!config.feature.allow_user_supply_unsafe_domain && !allowDomain.has(url.hostname)) {
@@ -17,23 +20,10 @@ const ProcessItems = async (ctx, currentUrl, title) => {
 
     const rootUrl = `https://${domain}`;
 
-    const cookieJar = new CookieJar();
-
-    const javdbSession = config.javdb.session();
-    if (javdbSession) {
-        const cookie = Cookie.fromJSON({
-            key: '_jdb_session',
-            value: javdbSession,
-            domain,
-            path: '/',
-        });
-        cookie && cookieJar.setCookie(cookie, rootUrl);
-    }
-
     const response = await got({
         method: 'get',
         url: url.href,
-        cookieJar,
+        cookieJar: manager.cookieJar,
         headers: {
             'User-Agent': config.trueUA,
         },
@@ -43,25 +33,25 @@ const ProcessItems = async (ctx, currentUrl, title) => {
 
     $('.tags, .tag-can-play, .over18-modal').remove();
 
-    let items = $('div.item')
+    let items: DataItem[] = $('div.item')
         .slice(0, ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 20)
         .toArray()
         .map((item) => {
-            item = $(item);
+            const item2 = $(item);
             return {
-                title: item.find('.video-title').text(),
-                link: `${rootUrl}${item.find('.box').attr('href')}`,
-                pubDate: parseDate(item.find('.meta').text()),
+                title: item2.find('.video-title').text(),
+                link: `${rootUrl}${item2.find('.box').attr('href')}`,
+                pubDate: parseDate(item2.find('.meta').text()),
             };
         });
 
-    items = await Promise.all(
+    items = (await Promise.all(
         items.map((item) =>
-            cache.tryGet(item.link, async () => {
+            cache.tryGet(item.link as string, async () => {
                 const detailResponse = await got({
                     method: 'get',
                     url: item.link,
-                    cookieJar,
+                    cookieJar: manager.cookieJar,
                     headers: {
                         'User-Agent': config.trueUA,
                     },
@@ -85,12 +75,12 @@ const ProcessItems = async (ctx, currentUrl, title) => {
                     .toArray()
                     .map((v) => content(v).text());
                 item.author = content('.panel-block .value').last().parent().find('.value a').first().text();
-                item.description = content('.cover-container, .column-video-cover').html() + content('.movie-panel-info').html() + content('#magnets-content').html() + content('.preview-images').html();
+                item.description = [content('.cover-container, .column-video-cover').html(), content('.movie-panel-info').html(), content('#magnets-content').html(), content('.preview-images').html()].join('');
 
                 return item;
             })
         )
-    );
+    )) as DataItem[];
 
     const htmlTitle = $('title').text();
     const subject = htmlTitle.includes('|') ? htmlTitle.split('|')[0] : '';
