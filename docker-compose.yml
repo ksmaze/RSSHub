@@ -1,35 +1,69 @@
+networks:
+    rssforever:
+
+        # ---------------------------------------- nginx ---------------------------------------- #
 services:
+    # ---------------------------------------- rss ---------------------------------------- #
+    service.rss:
+        image: freshrss/freshrss
+        restart: always
+        depends_on:
+            - db
+        ports:
+            - 13829:80
+        volumes:
+            - ./freshrss-data:/var/www/FreshRSS/data
+            - ./freshrss-extensions:/var/www/FreshRSS/extensions
+        environment:
+            CRON_MIN: '*/20'
+            TZ: Asia/Shanghai
+        networks:
+            - rssforever
+
+    db:
+        image: postgres:13.14-alpine3.19
+        restart: always
+        volumes:
+            - ./db:/var/lib/postgresql/data
+        environment:
+            POSTGRES_USER: freshrss
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-freshrss}
+            POSTGRES_DB: freshrss
+        networks:
+            - rssforever
+
+    # ---------------------------------------- rsshub ---------------------------------------- #
     rsshub:
-        # two ways to enable puppeteer:
-        # * comment out marked lines, then use this image instead: diygod/rsshub:chromium-bundled
-        # * (consumes more disk space and memory) leave everything unchanged
         image: diygod/rsshub
         restart: always
         ports:
-            - "1200:1200"
+            - 13828:13828
         environment:
+            PORT: 13828
             NODE_ENV: production
             CACHE_TYPE: redis
-            REDIS_URL: "redis://redis:6379/"
+            REDIS_URL: 'redis://redis:6379/'
             PUPPETEER_WS_ENDPOINT: "ws://browserless:3000" # marked
-        healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:1200/healthz"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
         depends_on:
             - redis
             - browserless # marked
+        networks:
+            - rssforever
+        volumes:
+            - .:/app
 
-    browserless: # marked
+    browserless:
+        # marked
         image: browserless/chrome # marked
         restart: always # marked
-        ulimits: # marked
-            core: # marked
+        ulimits:
+            # marked
+            core:
+                # marked
                 hard: 0 # marked
                 soft: 0 # marked
         healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:3000/pressure"]
+            test: [ "CMD", "curl", "-f", "http://localhost:3000/pressure" ]
             interval: 30s
             timeout: 10s
             retries: 3
@@ -37,14 +71,33 @@ services:
     redis:
         image: redis:alpine
         restart: always
+        environment:
+            - TZ=Asia/Shanghai
         volumes:
             - redis-data:/data
         healthcheck:
-            test: ["CMD", "redis-cli", "ping"]
+            test: [ "CMD", "redis-cli", "ping" ]
             interval: 30s
             timeout: 10s
             retries: 5
             start_period: 5s
+        networks:
+            - rssforever
+
+    # ---------------------------------------- watchtower ---------------------------------------- #
+    # 每天早上 10 点定时更新 RSSHub , 如无需可注释或删除本段.
+    watchtower:
+        image: containrrr/watchtower:latest
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+        environment:
+            - TZ=Asia/Shanghai
+            - WATCHTOWER_CLEANUP=true
+            - WATCHTOWER_SCHEDULE=0 0 10 * * *
+        restart: always
+        command: rssforever-watchtower-1 rssforever-rsshub-1 rssforever-redis-1 rssforever-browserless-1
+        networks:
+            - rssforever
 
 volumes:
     redis-data:

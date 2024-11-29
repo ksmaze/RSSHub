@@ -1,7 +1,7 @@
 import randUserAgent from '@/utils/rand-user-agent';
 import 'dotenv/config';
 import { ofetch } from 'ofetch';
-import { CookieCloudQuery, cookieCloudQuery, createCookieCloudSyncJob } from '@/utils/cookie-cloud';
+import { CloudCookieConfig, manager } from '@/utils/cookie-cloud';
 
 let envs = process.env;
 
@@ -77,12 +77,7 @@ export type Config = {
     };
     suffix?: string;
     titleLengthLimit: number;
-    cookieCloud: {
-        host?: string;
-        uuid?: string;
-        password?: string;
-        updateCron: string;
-    };
+    cookieCloud: CloudCookieConfig;
     openai: {
         apiKey?: string;
         model?: string;
@@ -197,9 +192,6 @@ export type Config = {
     iwara: {
         username?: string;
         password?: string;
-    };
-    javdb: {
-        session: CookieCloudQuery;
     };
     keylol: {
         cookie?: string;
@@ -377,9 +369,6 @@ export type Config = {
     };
     zhihu: {
         cookies?: string;
-    };
-    zodgame: {
-        cookie?: string;
     };
     zsxq: {
         accessToken?: string;
@@ -622,14 +611,6 @@ const calculateValue = () => {
             username: envs.IWARA_USERNAME,
             password: envs.IWARA_PASSWORD,
         },
-        javdb: {
-            session: cookieCloudQuery({
-                domain: 'javdb.com',
-                name: '_jdb_session',
-                path: '/',
-                default_value: envs.JAVDB_SESSION,
-            }),
-        },
         keylol: {
             cookie: envs.KEYLOL_COOKIE,
         },
@@ -807,19 +788,22 @@ const calculateValue = () => {
         zhihu: {
             cookies: envs.ZHIHU_COOKIES,
         },
-        zodgame: {
-            cookie: envs.ZODGAME_COOKIE,
-        },
         zsxq: {
             accessToken: envs.ZSXQ_ACCESS_TOKEN,
         },
     };
 
+    if (envs.JAVDB_SESSION) {
+        manager.setCookie('javdb.com', '_jdb_session', envs.JAVDB_SESSION);
+    }
+
+    if (envs.ZODGAME_COOKIE) {
+        manager.setCookie('zodgame.xyz', undefined, envs.ZODGAME_COOKIE);
+    }
+
     for (const name in _value) {
         value[name] = _value[name];
     }
-
-    createCookieCloudSyncJob(_value.cookieCloud);
 };
 calculateValue();
 
