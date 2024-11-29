@@ -10,6 +10,7 @@ const idNameMap = new Map([
     ['wp', { title: '壁纸图库', suffix: 'ent/wp', nodeId: '20117' }],
     ['wenku', { title: '游民盘点', suffix: 'wenku', nodeId: '20106' }],
     ['xz', { title: '游民福利', suffix: 'ent/xz', nodeId: '20119' }],
+    ['tu', { title: '动图|囧图', suffix: 'ent/111', nodeId: '20107' }],
 ]);
 
 export const route: Route = {
@@ -47,7 +48,7 @@ async function handler(ctx: Context) {
     }
 
     const response = await getArticleList(idName.nodeId);
-    const list = parseArticleList(response);
+    const list = parseArticleList(response).filter((item) => category !== 'tu' || item.title.indexOf('动态图') > 0 || item.title.indexOf('囧图') > 0);
     const fullTextList = await Promise.all(list.map((item) => getArticle(item)));
     return {
         title: `${idName.title} - 游民娱乐`,

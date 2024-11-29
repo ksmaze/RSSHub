@@ -63,26 +63,27 @@ export const parseArticleList = (response: string) => {
 
 export const getArticle = (item) =>
     cache.tryGet(item.link, async () => {
-        const response = await ofetch(item.link);
-        const $ = load(response);
-        const content = $('.Mid2L_con, .MidLcon');
+        const response = await ofetch('https://router3.gamersky.com/@/postPage/index/6.16.40/0/App_Android', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+            },
+            body: JSON.stringify({ postUrl: item.link }),
+            parseResponse: JSON.parse,
+        });
+        const $ = load(response.post.contentInHtml);
+        const content = $.root();
         content.find('.appGameBuyCardIframe, .GSAppButton, .Mid2L_down').remove();
         content.find('a').each((_, item) => {
-            if (item.attribs.href?.startsWith('https://www.gamersky.com/showimage/id_gamersky.shtml?')) {
-                item.attribs.href = item.attribs.href.replace('https://www.gamersky.com/showimage/id_gamersky.shtml?', '');
+            if (item.attribs.href === 'javascript:void(0);') {
+                item.attribs.href = '';
             }
         });
         content.find('img').each((_, item) => {
-            if (item.attribs.src === 'http://image.gamersky.com/webimg13/zhuanti/common/blank.png') {
-                item.attribs.src = item.attribs['data-origin'];
-            } else if (item.attribs.src.endsWith('_S.jpg')) {
-                item.attribs.src = item.attribs.src.replace('_S.jpg', '.jpg');
-            }
+            item.attribs.src = item.attribs.imageurl;
         });
-        content.find('.Slides li').each((_, item) => {
-            if (item.attribs.style === 'display: none;') {
-                item.attribs.style = 'display: list-item;';
-            }
+        content.find('[style]').each((_, item) => {
+            item.attribs.style = '';
         });
         item.description = content.html() || item.description;
         return item satisfies DataItem;
