@@ -51,14 +51,31 @@ const getFakeGot = (defaultOptions?: any) => {
             delete options.parseResponse;
         }
 
+        const cookieJar = options?.cookieJar;
         if (options.cookieJar) {
-            const cookies = options.cookieJar.getCookiesSync(request);
-            if (cookies.length) {
+            const cookies = options.cookieJar.getCookieStringSync(request);
+            // console.log('cookies', cookies);
+            if (cookies) {
                 if (!options.headers) {
                     options.headers = {};
                 }
-                options.headers.cookie = cookies.join('; ');
+                options.headers.cookie = cookies;
             }
+            options.onResponse = ({ request, response }) => {
+                if (response.redirected) {
+                    logger.http(`Redirecting to ${response.url} for ${request}`);
+                }
+                const setCookies = response.headers.getSetCookie?.() || response.headers.get('set-cookie');
+                // console.log('setCookies', response);
+                if (setCookies) {
+                    const cookies = Array.isArray(setCookies) ? setCookies : [setCookies];
+                    for (const cookie of cookies) {
+                        if (cookie) {
+                            cookieJar.setCookieSync(cookie, response.url);
+                        }
+                    }
+                }
+            };
             delete options.cookieJar;
         }
 

@@ -1,5 +1,13 @@
 import CryptoJS from 'crypto-js';
 import { CronJob } from 'cron';
+import { Cookie, CookieJar, MemoryCookieStore } from 'tough-cookie';
+
+export interface CloudCookieConfig {
+    host: string | undefined;
+    uuid: string | undefined;
+    password: string | undefined;
+    updateCron: string;
+}
 
 interface CookieItem {
     domain: string;
@@ -24,86 +32,88 @@ interface DecryptedData {
 
 globalThis.cookieCloudItems = [] as CookieItem[];
 
-const cloudCookie = async (host: string, uuid: string, password: string) => {
-    let cookies: CookieItem[] = [];
-    try {
-        const url = `${host}/get/${uuid}`;
-        const ret = await fetch(url);
-        const json = await ret.json();
-        if (json && json.encrypted) {
-            const { cookie_data } = cookieDecrypt(uuid, json.encrypted, password);
-            for (const key in cookie_data) {
-                if (!cookie_data.hasOwnProperty(key)) {
-                    continue;
-                }
-                cookies = cookies.concat(
-                    cookie_data[key].map((item) => {
+class CloudCookieManager {
+    host: string | undefined;
+    uuid: string | undefined;
+    password: string | undefined;
+    cookieCloudItems: CookieItem[] = [];
+    job: CronJob<null, CloudCookieManager> | undefined;
+    cookieJar = new CookieJar(new MemoryCookieStore(), { rejectPublicSuffixes: false });
+
+    CloudCookieManager() {}
+
+    initial = async (config: CloudCookieConfig): Promise<void> => {
+        if (this.host === undefined) {
+            this.host = config.host;
+            this.uuid = config.uuid;
+            this.password = config.password;
+
+            this.job = CronJob.from({
+                cronTime: config.updateCron,
+                onTick: async (): Promise<void> => {
+                    await this.fetchCookies();
+                },
+                context: this,
+                start: true,
+                runOnInit: false,
+            });
+            await this.fetchCookies();
+        }
+    };
+
+    fetchCookies = async () => {
+        try {
+            const url = `${this.host}/get/${this.uuid}`;
+            const ret = await fetch(url);
+            const json = await ret.json();
+            if (json && json.encrypted) {
+                const { cookie_data } = this.cookieDecrypt(json.encrypted);
+                for (const key in cookie_data) {
+                    if (!cookie_data.hasOwnProperty(key)) {
+                        continue;
+                    }
+                    // console.log('cookie_data', cookie_data);
+                    for (const item of cookie_data[key]) {
                         if (item.sameSite === 'unspecified') {
                             item.sameSite = 'Lax';
                         }
-                        return item;
-                    })
-                );
+                        const url = item.secure ? `https://${item.domain}` : `http://${item.domain}`;
+                        // eslint-disable-next-line no-await-in-loop
+                        await this.cookieJar.setCookie(
+                            new Cookie({
+                                key: item.name,
+                                value: item.value,
+                                domain: item.domain,
+                                path: item.path,
+                                expires: new Date(item.expirationDate * 1000),
+                                hostOnly: item.hostOnly,
+                                httpOnly: item.httpOnly,
+                                secure: item.secure,
+                                sameSite: item.sameSite,
+                            }),
+                            url
+                        );
+                    }
+                }
             }
+        } catch {
+            // console.error('An error occurred:', error.stack);
         }
-    } catch {
-        /* empty */
+    };
+
+    cookieDecrypt = (encrypted: string) => {
+        const the_key = CryptoJS.MD5(`${this.uuid}-${this.password}`).toString().substring(0, 16);
+        const decrypted = CryptoJS.AES.decrypt(encrypted, the_key).toString(CryptoJS.enc.Utf8);
+        return JSON.parse(decrypted) as DecryptedData;
+    };
+
+    setCookie(domain: string, name: string | undefined, value: string) {
+        if (name) {
+            this.cookieJar.setCookieSync(`${name}=${value};`, `https://${domain}`);
+        } else {
+            this.cookieJar.setCookieSync(value, `https://${domain}`);
+        }
     }
-    globalThis.cookieCloudItems = cookies;
-};
-
-const cookieDecrypt = (uuid: string, encrypted: string, password: string) => {
-    const the_key = CryptoJS.MD5(`${uuid}-${password}`).toString().substring(0, 16);
-    const decrypted = CryptoJS.AES.decrypt(encrypted, the_key).toString(CryptoJS.enc.Utf8);
-    return JSON.parse(decrypted) as DecryptedData;
-};
-
-let cookieCloudSyncJob: CronJob | null = null;
-export const createCookieCloudSyncJob = (config) => {
-    const cookieCloudHost = config.host;
-    const cookieCloudUuid = config.uuid;
-    const cookieCloudPassword = config.password;
-    cookieCloudSyncJob?.stop();
-    if (cookieCloudHost !== undefined && cookieCloudUuid !== undefined && cookieCloudPassword !== undefined) {
-        cookieCloudSyncJob = CronJob.from({
-            cronTime: config.updateCron,
-            async onTick() {
-                await cloudCookie(cookieCloudHost, cookieCloudUuid, cookieCloudPassword);
-            },
-            start: true,
-            runOnInit: true,
-        });
-    }
-};
-
-interface CookieCloudQueryParam {
-    // domain of cookie
-    domain: string;
-    // optional cookie key, leave it undefined to get all cookie
-    name?: string;
-    // optional cookie path
-    path?: string;
-    // optional default value if no cookie matched.
-    default_value?: string;
 }
 
-export type CookieCloudQuery = () => string | undefined;
-
-export const cookieCloudQuery =
-    (query: CookieCloudQueryParam): CookieCloudQuery =>
-    () => {
-        let result: string | undefined;
-        for (const cookieCloudItem of globalThis.cookieCloudItems || []) {
-            if (cookieCloudItem.domain === query.domain && query.path !== undefined && cookieCloudItem.path === query.path) {
-                if (query.name === undefined) {
-                    result = (result || '') + `${cookieCloudItem.name}=${cookieCloudItem.value};`;
-                    continue;
-                }
-                if (cookieCloudItem.name === query.name) {
-                    result = cookieCloudItem.value;
-                    break;
-                }
-            }
-        }
-        return result || query.default_value;
-    };
+export const manager = new CloudCookieManager();
