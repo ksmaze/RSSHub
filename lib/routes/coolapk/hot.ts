@@ -1,4 +1,4 @@
-import { Route } from '@/types';
+import { DataItem, Route } from '@/types';
 import got from '@/utils/got';
 import utils from './utils';
 const getLinkAndTitle = (type, period): { link: string; title: string } => {
@@ -131,25 +131,23 @@ async function handler(ctx) {
     });
     const data = r.data.data;
     // console.log('data', r, headers);
-    const t = [];
+    const t: any[] = [];
     for (const i of data) {
         if (i.entityType === 'card') {
             for (const k of i.entities) {
-                t.push(k);
+                t.push(k as any);
             }
         } else {
-            t.push(i);
+            t.push(i as any);
         }
     }
 
-    let out = await Promise.all(t.map((item) => utils.parseDynamic(item)));
-
-    out = out.filter(Boolean);
+    const out: (DataItem | undefined)[] = await Promise.all(t.map((item) => utils.parseDynamic(item)));
 
     return {
         title,
         link: 'https://www.coolapk.com/',
         description: `feedId:85083087057291264+userId:77884867866416128`,
-        item: out,
+        item: out.filter(Boolean) as DataItem[],
     };
 }

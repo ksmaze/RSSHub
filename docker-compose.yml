@@ -1,7 +1,6 @@
 networks:
     rssforever:
 
-        # ---------------------------------------- nginx ---------------------------------------- #
 services:
     # ---------------------------------------- rss ---------------------------------------- #
     service.rss:
@@ -17,6 +16,26 @@ services:
         environment:
             CRON_MIN: '*/20'
             TZ: America/Los_Angeles
+        networks:
+            - rssforever
+
+    miniflux:
+        image: miniflux/miniflux:latest
+        restart: unless-stopped
+        depends_on:
+            - db
+        ports:
+            - 13830:8080
+        environment:
+        - DATABASE_URL=postgres://freshrss:freshrss@db/freshrss?sslmode=disable
+        - RUN_MIGRATIONS=1
+        - CREATE_ADMIN=1
+        - ADMIN_USERNAME=ksmaze
+        - ADMIN_PASSWORD=jA*fKQB*cGep9fQM
+        - BASE_URL=http://209.182.236.176:13830
+        - BATCH_SIZE=5
+        - POLLING_SCHEDULER=entry_frequency
+        - POLLING_PARSING_ERROR_LIMIT=1000
         networks:
             - rssforever
 
@@ -74,7 +93,7 @@ services:
         environment:
             - TZ=America/Los_Angeles
         volumes:
-            - redis-data:/data
+            - ./redis-data:/data
         networks:
             - rssforever
 
@@ -95,9 +114,6 @@ services:
             - WATCHTOWER_CLEANUP=true
             - WATCHTOWER_SCHEDULE=0 0 6 * * *
         restart: always
-        command: rssforever-watchtower-1 rssforever-rsshub-1 rssforever-service.rss-1 rssforever-redis-1 rssforever-browserless-1
+        command: rsshub-watchtower-1 rsshub-rsshub-1 rsshub-service.rss-1 rsshub-redis-1 rsshub-browserless-1 rsshub-miniflux-1
         networks:
             - rssforever
-
-volumes:
-    redis-data:

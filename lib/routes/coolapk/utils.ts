@@ -77,7 +77,7 @@ const parseDynamic = async (item) => {
         case 17:
         case 20: {
             // //////////////////////////////////////////// 基本内容 ////////////////////////////////////////////
-            if (item.issummary) {
+            if (item.issummary && itemUrl) {
                 // 需要爬内容
                 description = await cache.tryGet(itemUrl, async () => {
                     const result = await got(itemUrl, {
