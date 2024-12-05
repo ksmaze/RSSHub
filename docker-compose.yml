@@ -103,6 +103,12 @@ services:
         networks:
             - rssforever
 
+    feed-aggregator:
+        image: feed-aggregator:latest
+        restart: always
+        networks:
+            - rssforever
+
     # ---------------------------------------- watchtower ---------------------------------------- #
     # 每天早上 6 点定时更新 RSSHub , 如无需可注释或删除本段.
     watchtower:
