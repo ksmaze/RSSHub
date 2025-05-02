@@ -30,3 +30,7 @@ package-lock.json
 # pnpm-lock.yaml
 yarn.lock
 yarn-error.log
+
+freshrss-data
+freshrss-extensions
+db
