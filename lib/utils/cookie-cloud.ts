@@ -30,13 +30,10 @@ interface DecryptedData {
     local_storage_data: Record<string, any>;
 }
 
-globalThis.cookieCloudItems = [] as CookieItem[];
-
 class CloudCookieManager {
     host: string | undefined;
     uuid: string | undefined;
     password: string | undefined;
-    cookieCloudItems: CookieItem[] = [];
     job: CronJob<null, CloudCookieManager> | undefined;
     cookieJar = new CookieJar(new MemoryCookieStore(), { rejectPublicSuffixes: false });
 

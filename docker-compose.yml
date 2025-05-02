@@ -5,7 +5,7 @@ networks:
 services:
     # ---------------------------------------- rss ---------------------------------------- #
     service.rss:
-        image: freshrss/freshrss
+        image: freshrss/freshrss:latest
         restart: always
         depends_on:
             - db
@@ -16,7 +16,7 @@ services:
             - ./freshrss-extensions:/var/www/FreshRSS/extensions
         environment:
             CRON_MIN: '*/20'
-            TZ: Asia/Shanghai
+            TZ: America/Los_Angeles
         networks:
             - rssforever
 
@@ -34,7 +34,7 @@ services:
 
     # ---------------------------------------- rsshub ---------------------------------------- #
     rsshub:
-        image: diygod/rsshub
+        image: diygod/rsshub:latest
         restart: always
         ports:
             - 13828:13828
@@ -54,7 +54,7 @@ services:
 
     browserless:
         # marked
-        image: browserless/chrome # marked
+        image: browserless/chrome:latest # marked
         restart: always # marked
         ulimits:
             # marked
@@ -72,30 +72,30 @@ services:
         image: redis:alpine
         restart: always
         environment:
-            - TZ=Asia/Shanghai
+            - TZ=America/Los_Angeles
         volumes:
             - redis-data:/data
-        healthcheck:
-            test: [ "CMD", "redis-cli", "ping" ]
-            interval: 30s
-            timeout: 10s
-            retries: 5
-            start_period: 5s
+        networks:
+            - rssforever
+
+    feed-aggregator:
+        image: feed-aggregator:latest
+        restart: always
         networks:
             - rssforever
 
     # ---------------------------------------- watchtower ---------------------------------------- #
-    # 每天早上 10 点定时更新 RSSHub , 如无需可注释或删除本段.
+    # 每天早上 6 点定时更新 RSSHub , 如无需可注释或删除本段.
     watchtower:
         image: containrrr/watchtower:latest
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
         environment:
-            - TZ=Asia/Shanghai
+            - TZ=America/Los_Angeles
             - WATCHTOWER_CLEANUP=true
-            - WATCHTOWER_SCHEDULE=0 0 10 * * *
+            - WATCHTOWER_SCHEDULE=0 0 6 * * *
         restart: always
-        command: rssforever-watchtower-1 rssforever-rsshub-1 rssforever-redis-1 rssforever-browserless-1
+        command: rssforever-watchtower-1 rssforever-rsshub-1 rssforever-service.rss-1 rssforever-redis-1 rssforever-browserless-1
         networks:
             - rssforever
 

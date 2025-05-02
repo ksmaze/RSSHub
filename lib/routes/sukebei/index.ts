@@ -53,7 +53,7 @@ async function handler(ctx) {
             };
         })
         .filter((item) => item !== undefined)
-        .slice(0, 20) satisfies DataItem[];
+        .slice(0, 50) satisfies DataItem[];
 
     for (const item of items) {
         // eslint-disable-next-line no-await-in-loop
