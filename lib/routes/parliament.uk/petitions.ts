@@ -4,12 +4,9 @@ import { type Context } from 'hono';
 import { load, type CheerioAPI } from 'cheerio';
 
 import { type DataItem, type Route, type Data, ViewType } from '@/types';
-import { getCurrentPath } from '@/utils/helpers';
 import { parseDate } from '@/utils/parse-date';
 import { art } from '@/utils/render';
 import ofetch from '@/utils/ofetch';
-
-const __dirname = getCurrentPath(import.meta.url);
 
 export const handler = async (ctx: Context): Promise<Data> => {
     const { state = 'all' } = ctx.req.param();
@@ -94,12 +91,12 @@ export const route: Route = {
     parameters: {
         state: 'State, `all` by default, see below',
     },
-    description: `:::tip
+    description: `::: tip
 If you subscribe to [Recent petitions](https://petition.parliament.uk/petitions?state=recent)，where the URL is \`https://petition.parliament.uk/petitions?state=recent\`, use the value of \`state\` as the parameter to fill in. Therefore, the route will be [\`/parliament.uk/petitions/recent\`](https://rsshub.app/parliament.uk/petitions/recent).
 :::
 
 <details>
-  <summary>More states</summary>
+<summary>More states</summary>
 
 | Name                            | ID                |
 | ------------------------------- | ----------------- |

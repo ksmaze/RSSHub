@@ -1,13 +1,10 @@
 import { Route } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
-import { getCurrentPath } from '@/utils/helpers';
 import path from 'node:path';
 import { art } from '@/utils/render';
 import { config } from '@/config';
 import InvalidParameterError from '@/errors/types/invalid-parameter';
-
-const __dirname = getCurrentPath(import.meta.url);
 
 export const route: Route = {
     path: '/news/:category?',
@@ -37,7 +34,7 @@ export const route: Route = {
     handler,
     url: 'www.i-cable.com/',
     description: `
-:::tip
+::: tip
 分類只可用分類名稱，如：新聞資訊/港聞
 :::`,
 };

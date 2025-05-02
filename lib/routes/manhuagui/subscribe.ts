@@ -1,6 +1,4 @@
 import { Route } from '@/types';
-import { getCurrentPath } from '@/utils/helpers';
-const __dirname = getCurrentPath(import.meta.url);
 
 import got from '@/utils/got';
 import { parseRelativeDate } from '@/utils/parse-date';
@@ -38,10 +36,10 @@ export const route: Route = {
     maintainers: ['shininome'],
     handler,
     url: 'www.mhgui.com/user/book/shelf',
-    description: `:::tip
+    description: `::: tip
   个人订阅需要自建
   环境变量需要添加 MHGUI\_COOKIE
-  :::`,
+:::`,
 };
 
 async function handler() {

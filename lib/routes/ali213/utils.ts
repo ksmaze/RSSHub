@@ -56,6 +56,6 @@ export const getArticle = (item) => {
 };
 
 export const mdTableBuilder = (data: idNameMap[]) => {
-    const table = '|' + data.map((item) => `${item.type}|`).join('') + '\n|' + Array(data.length).fill('---|').join('') + '\n|' + data.map((item) => `${item.name}|`).join('') + '\n';
+    const table = '|' + data.map((item) => `${item.type}|`).join('') + '\n|' + Array.from({ length: data.length }).fill('---|').join('') + '\n|' + data.map((item) => `${item.name}|`).join('') + '\n';
     return table;
 };

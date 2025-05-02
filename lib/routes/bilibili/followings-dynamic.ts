@@ -5,7 +5,7 @@ import { config } from '@/config';
 import utils from './utils';
 import JSONbig from 'json-bigint';
 import { fallback, queryToBoolean } from '@/utils/readable-social';
-import querystring from 'querystring';
+import querystring from 'node:querystring';
 import ConfigNotFoundError from '@/errors/types/config-not-found';
 
 export const route: Route = {
@@ -45,9 +45,9 @@ export const route: Route = {
     name: '用户关注动态',
     maintainers: ['TigerCubDen', 'JimenezLi'],
     handler,
-    description: `:::warning
+    description: `::: warning
   用户动态需要 b 站登录后的 Cookie 值，所以只能自建，详情见部署页面的配置模块。
-  :::`,
+:::`,
 };
 
 async function handler(ctx) {

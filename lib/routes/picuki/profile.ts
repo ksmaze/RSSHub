@@ -1,6 +1,4 @@
 import { DataItem, Route } from '@/types';
-import { getCurrentPath } from '@/utils/helpers';
-const __dirname = getCurrentPath(import.meta.url);
 
 import cache from '@/utils/cache';
 import { load } from 'cheerio';
@@ -69,10 +67,10 @@ export const route: Route = {
     maintainers: ['hoilc', 'Rongronggg9', 'devinmugen', 'NekoAria'],
     handler,
     description: `
-  :::warning
+::: warning
   Instagram Stories do not have a reliable guid. It is possible that your RSS reader show the same story more than once.
   Though, every Story expires after 24 hours, so it may be not so serious.
-  :::`,
+:::`,
 };
 
 async function handler(ctx) {

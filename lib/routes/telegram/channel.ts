@@ -1,5 +1,4 @@
 import { Route, ViewType } from '@/types';
-import { getCurrentPath } from '@/utils/helpers';
 import cache from '@/utils/cache';
 import { config } from '@/config';
 import ofetch from '@/utils/ofetch';
@@ -7,11 +6,9 @@ import { load } from 'cheerio';
 import { parseDate } from '@/utils/parse-date';
 import { art } from '@/utils/render';
 import path from 'node:path';
-import querystring from 'querystring';
+import querystring from 'node:querystring';
 import { fallback, queryToBoolean } from '@/utils/readable-social';
 import tglibchannel from './tglib/channel';
-
-const __dirname = getCurrentPath(import.meta.url);
 
 /* message types */
 const REPLY = 'REPLY';
@@ -145,9 +142,9 @@ For backward compatibility reasons, invalid \`routeParams\` will be treated as \
     maintainers: ['DIYgod', 'Rongronggg9', 'synchrone', 'pseudoyu'],
     handler,
     description: `
-  :::tip
+::: tip
   Due to Telegram restrictions, some channels involving pornography, copyright, and politics cannot be subscribed. You can confirm by visiting \`https://t.me/s/:username\`, it's recommended to deploy your own instance with telegram api configs (create your telegram application via \`https://core.telegram.org/api/obtaining_api_id\`, run this command \`node ./lib/routes/telegram/scripts/get-telegram-session.mjs\` to get \`TELEGRAM_SESSION\` and set it as Environment Variable).
-  :::`,
+:::`,
 };
 
 async function handler(ctx) {
@@ -519,7 +516,7 @@ async function handler(ctx) {
                             const mapBackground = locationObj.find('.tgme_widget_message_location').css('background-image');
                             const mapBackgroundUrl = mapBackground && mapBackground.match(/url\('(.*)'\)/);
                             const mapBackgroundUrlSrc = mapBackgroundUrl && mapBackgroundUrl[1];
-                            const mapImgHtml = mapBackgroundUrlSrc ? `<img src="${mapBackgroundUrlSrc}">` : showMediaTagAsEmoji ? mediaTagDict[LOCATION][1] : mediaTagDict[LOCATION][0];
+                            const mapImgHtml = mapBackgroundUrlSrc ? `<img src="${mapBackgroundUrlSrc}">` : (showMediaTagAsEmoji ? mediaTagDict[LOCATION][1] : mediaTagDict[LOCATION][0]);
                             return locationLink ? `<a href="${locationLink}">${mapImgHtml}</a>` : mapImgHtml;
                         } else {
                             return '';
@@ -719,7 +716,7 @@ async function handler(ctx) {
                     if (messageTextObj.length > 0 && !titleCompleteFlag) {
                         const _messageTextObj = $(messageTextObj.toString());
                         _messageTextObj.find('br').replaceWith('\n');
-                        const trimmedTitleText = _messageTextObj.text().replaceAll('\n', ' ').trim();
+                        const trimmedTitleText = _messageTextObj.text().split('\n').at(0)?.trim();
                         messageTitle += (messageTitle && trimmedTitleText ? ': ' : '') + trimmedTitleText;
                     }
 

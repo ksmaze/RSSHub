@@ -99,7 +99,7 @@ class CloudCookieManager {
     };
 
     cookieDecrypt = (encrypted: string) => {
-        const the_key = CryptoJS.MD5(`${this.uuid}-${this.password}`).toString().substring(0, 16);
+        const the_key = CryptoJS.MD5(`${this.uuid}-${this.password}`).toString().slice(0, 16);
         const decrypted = CryptoJS.AES.decrypt(encrypted, the_key).toString(CryptoJS.enc.Utf8);
         return JSON.parse(decrypted) as DecryptedData;
     };

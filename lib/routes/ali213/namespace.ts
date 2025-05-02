@@ -1,11 +1,9 @@
 import type { Namespace } from '@/types';
 
 export const namespace: Namespace = {
-    name: 'Ali213',
-    url: 'ali213.com',
-
-    zh: {
-        name: '游侠网',
-    },
+    name: '游侠网',
+    url: 'ali213.net',
+    categories: ['game'],
+    description: '',
     lang: 'zh-CN',
 };

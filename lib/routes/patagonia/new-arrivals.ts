@@ -1,6 +1,4 @@
 import { Route } from '@/types';
-import { getCurrentPath } from '@/utils/helpers';
-const __dirname = getCurrentPath(import.meta.url);
 
 import got from '@/utils/got';
 import { art } from '@/utils/render';
@@ -36,8 +34,8 @@ export const route: Route = {
     maintainers: [],
     handler,
     description: `| Men's | Women's | Kids' & Baby | Packs & Gear |
-  | ----- | ------- | ------------ | ------------ |
-  | mens  | womens  | kids         | luggage      |`,
+| ----- | ------- | ------------ | ------------ |
+| mens  | womens  | kids         | luggage      |`,
 };
 
 async function handler(ctx) {

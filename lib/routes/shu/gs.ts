@@ -35,8 +35,8 @@ export const route: Route = {
     handler,
     url: 'gs.shu.edu.cn/',
     description: `| 综合新闻 | 培养管理 | 国际交流 |
-  | -------- | --------- | --------- |
-  | zhxw     | pygl      | gjjl      |`,
+| -------- | --------- | --------- |
+| zhxw     | pygl      | gjjl      |`,
 };
 
 async function handler(ctx) {
@@ -101,6 +101,7 @@ async function handler(ctx) {
         title: noticeType[type].title,
         description: noticeType[type].title,
         link: noticeType[type].url,
+        image: 'https://www.shu.edu.cn/__local/0/08/C6/1EABE492B0CF228A5564D6E6ABE_779D1EE3_5BF7.png',
         item: items,
     };
 }

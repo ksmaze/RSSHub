@@ -1,6 +1,4 @@
 import { Route } from '@/types';
-import { getCurrentPath } from '@/utils/helpers';
-const __dirname = getCurrentPath(import.meta.url);
 
 import got from '@/utils/got';
 import { art } from '@/utils/render';
@@ -19,7 +17,7 @@ art.defaults.imports.render = function (string) {
 };
 
 export const route: Route = {
-    path: ['/month', '/volume'],
+    path: '/volume',
     example: '/hellogithub/volume',
     name: '月刊',
     maintainers: ['moke8', 'nczitzk', 'CaoMeiYouRen'],

@@ -1,6 +1,4 @@
 import { Route } from '@/types';
-import { getCurrentPath } from '@/utils/helpers';
-const __dirname = getCurrentPath(import.meta.url);
 
 import cache from '@/utils/cache';
 import got from '@/utils/got';
@@ -81,8 +79,8 @@ export const route: Route = {
     handler,
     url: 'hkej.com/',
     description: `| index    | stock    | hongkong | china    | international | property | current  |
-  | -------- | -------- | -------- | -------- | ------------- | -------- | -------- |
-  | 全部新闻 | 港股直击 | 香港财经 | 中国财经 | 国际财经      | 地产新闻 | 时事脉搏 |`,
+| -------- | -------- | -------- | -------- | ------------- | -------- | -------- |
+| 全部新闻 | 港股直击 | 香港财经 | 中国财经 | 国际财经      | 地产新闻 | 时事脉搏 |`,
 };
 
 async function handler(ctx) {
@@ -106,7 +104,7 @@ async function handler(ctx) {
             item = $(item);
             return {
                 title: item.text().trim(),
-                link: baseUrl + item.attr('href').substring(0, item.attr('href').lastIndexOf('/')),
+                link: baseUrl + item.attr('href').slice(0, item.attr('href').lastIndexOf('/')),
             };
         })
         .get();
