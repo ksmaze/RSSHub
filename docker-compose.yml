@@ -19,26 +19,6 @@ services:
         networks:
             - rssforever
 
-    miniflux:
-        image: miniflux/miniflux:latest
-        restart: unless-stopped
-        depends_on:
-            - db
-        ports:
-            - 13830:8080
-        environment:
-        - DATABASE_URL=postgres://freshrss:freshrss@db/freshrss?sslmode=disable
-        - RUN_MIGRATIONS=1
-        - CREATE_ADMIN=1
-        - ADMIN_USERNAME=ksmaze
-        - ADMIN_PASSWORD=jA*fKQB*cGep9fQM
-        - BASE_URL=http://209.182.236.176:13830
-        - BATCH_SIZE=5
-        - POLLING_SCHEDULER=entry_frequency
-        - POLLING_PARSING_ERROR_LIMIT=1000
-        networks:
-            - rssforever
-
     db:
         image: postgres:13.14-alpine3.19
         restart: always
