@@ -8,7 +8,7 @@ const dynamicTpye = { 0: '基本动态', 8: '酷图', 9: '评论', 10: '提问',
 
 const getRandomDEVICE_ID = () => {
     const id = [10, 6, 6, 6, 14];
-    const idStr = id.map((i) => Math.random().toString(36).substring(2, i));
+    const idStr = id.map((i) => Math.random().toString(36).slice(2, i));
     return idStr.join('-');
 };
 
@@ -77,20 +77,16 @@ const parseDynamic = async (item) => {
         case 17:
         case 20: {
             // //////////////////////////////////////////// 基本内容 ////////////////////////////////////////////
-            if (item.issummary && itemUrl) {
-                // 需要爬内容
-                description = await cache.tryGet(itemUrl, async () => {
-                    const result = await got(itemUrl, {
-                        headers: getHeaders(),
-                    });
-                    const message = `<p>` + result.data.data?.message.split('\n').join('<br>') + `</p>`;
-                    const picArr = item.picArr.filter(Boolean).map((i) => `<img src="${i}">`); // 若无图片，item.picArr=[""]
-                    return message + picArr.join('');
-                });
-            } else {
-                const picArr = item.picArr.filter(Boolean).map((i) => `<img src="${i}">`);
-                description = `<p>` + item.message + `</p>` + picArr.join('');
-            }
+            description =
+                item.issummary && itemUrl
+                    ? await cache.tryGet(itemUrl, async () => {
+                          const result = await got(itemUrl, {
+                              headers: getHeaders(),
+                          });
+                          const message = `<p>` + result.data.data?.message.split('\n').join('<br>') + `</p>`;
+                          return message;
+                      })
+                    : `<p>` + item.message + `</p>`;
             const $ = load('<div class="title-filter">' + description + '</div>');
             title = $('.title-filter').text().trim(); // no need to perform substring because it's will be handled by RSSHub 'TITLE_LENGTH_LIMIT'
 

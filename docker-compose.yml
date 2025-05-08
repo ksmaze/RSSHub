@@ -94,6 +94,6 @@ services:
             - WATCHTOWER_CLEANUP=true
             - WATCHTOWER_SCHEDULE=0 0 6 * * *
         restart: always
-        command: rsshub-watchtower-1 rsshub-rsshub-1 rsshub-service.rss-1 rsshub-redis-1 rsshub-browserless-1 rsshub-miniflux-1
+        command: rsshub-watchtower-1 rsshub-rsshub-1 rsshub-service.rss-1 rsshub-redis-1 rsshub-browserless-1
         networks:
             - rssforever
