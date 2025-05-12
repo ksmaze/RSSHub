@@ -81,7 +81,7 @@ async function handler(ctx: Context) {
     }
 
     const response = await getArticleList(idName.nodeId);
-    const list = parseArticleList(response);
+    const list = parseArticleList(response).filter((item) => !item.title.includes('动态图') && !item.title.includes('囧图'));
     const fullTextList = await Promise.all(list.map((item) => getArticle(item)));
     return {
         title: `${idName.name} - 游民星空`,

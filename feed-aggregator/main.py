@@ -92,26 +92,29 @@ def redupe_articles(articles, token, write_token):
     articles.reverse()
     
     # Handle duplicates by title
-    seen_read_titles = set()
-    seen_unread_titles = set()
-    unique_articles = []
+    unique_articles = set()
     for article in articles:
-        if article["read"] and article["title"] not in seen_read_titles:
-            seen_read_titles.add(article["title"])
-        elif not article["read"] and article["title"] not in seen_unread_titles:
-            seen_unread_titles.add(article["title"])
-        elif not article["read"] and (article["title"] in seen_read_titles or article["title"] in seen_unread_titles):
+        if article["title"] not in unique_articles:
+            unique_articles.add(article["title"])
+        elif not article["read"] and article["title"] in unique_articles:
             mark_read_article(article, token, write_token)
 
 
 def main():
+    print("Starting feed aggregator...")
+    time.sleep(60)
+    print("Fetching initial articles...")
     while True:
-        auth_token = get_auth_token(USERNAME, PASSWORD)
-        print("Fetching articles...")
-        articles = fetch_articles(auth_token)
-        write_token = get_write_token(auth_token)
-        redupe_articles(articles, auth_token, write_token)
-        time.sleep(600)
+        try:
+            auth_token = get_auth_token(USERNAME, PASSWORD)
+            print("Fetching articles...")
+            articles = fetch_articles(auth_token)
+            write_token = get_write_token(auth_token)
+            redupe_articles(articles, auth_token, write_token)
+            time.sleep(600)
+        except Exception as e:
+            print(f"Error: {e}")
+        time.sleep(60)
 
 
 if __name__ == "__main__":

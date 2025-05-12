@@ -18,7 +18,7 @@ interface ArticleList {
     body: string;
 }
 
-export const getArticleList = async (nodeId) => {
+export const getArticleList = async (nodeId: string) => {
     const response = await ofetch<ArticleList>(
         `https://db2.gamersky.com/LabelJsonpAjax.aspx?${new URLSearchParams({
             jsondata: JSON.stringify({
