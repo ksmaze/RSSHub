@@ -1,6 +1,7 @@
 import { DataItem, Route } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
+import { load } from 'cheerio';
 import Parser from 'rss-parser';
 
 const categories = {
@@ -56,20 +57,38 @@ async function handler(ctx) {
         .slice(0, 50) satisfies DataItem[];
 
     for (const item of items) {
-        // eslint-disable-next-line no-await-in-loop
-        const image = (await cache.tryGet(`https://oc1.bigsm.art/thumbs/?ids=${item.guid}`, async () => {
-            const detailResponse = await got({
-                method: 'get',
-                url: `https://oc1.bigsm.art/thumbs/?ids=${item.guid}`,
-                parseResponse: JSON.parse,
+        try {
+            // eslint-disable-next-line no-await-in-loop
+            const html = await cache.tryGet(item.link || '', async () => {
+                const detailResponse = await got({ method: 'get', url: item.link });
+                return detailResponse.data as string;
             });
-            if (detailResponse.data && detailResponse.data.length > 0) {
-                return detailResponse.data[0];
+            const descMatch = html?.match(/id="torrent-description">([\s\S]*?)<\/div>/);
+            if (descMatch) {
+                const urls = descMatch[1].match(/https?:\/\/imagetwist\.com\/[\w-]+\/[\w\-_]+\.jpg/g) || [];
+                if (urls.length > 0) {
+                    const href = urls[0];
+                    // eslint-disable-next-line no-await-in-loop
+                    const page = await cache.tryGet(href, async () => {
+                        const detailResponse = await got({ method: 'get', url: href });
+                        return detailResponse.data as string;
+                    });
+                    if (page === null) {
+                        continue;
+                    }
+                    const $ = load(page as string);
+                    const content = $.root();
+                    const imgMatch = content.find('img.img-responsive').attr('src');
+                    if (imgMatch) {
+                        item.image = imgMatch;
+                        item.description = `<img src="${imgMatch}">`;
+                    }
+                }
             }
-            return null;
-        })) as string | null;
-        if (image) {
-            item.image = image;
+        } catch (error) {
+            // ignore errors
+            // eslint-disable-next-line no-console
+            console.log(error);
         }
     }
 
