@@ -24,9 +24,6 @@ const ProcessItems = async (ctx, currentUrl, title) => {
         method: 'get',
         url: url.href,
         cookieJar: manager.cookieJar,
-        headers: {
-            'User-Agent': config.trueUA,
-        },
     });
 
     const $ = load(response.data);
@@ -48,13 +45,11 @@ const ProcessItems = async (ctx, currentUrl, title) => {
     items = (await Promise.all(
         items.map((item) =>
             cache.tryGet(item.link as string, async () => {
+                await new Promise((resolve) => setTimeout(resolve, 5000));
                 const detailResponse = await got({
                     method: 'get',
                     url: item.link,
                     cookieJar: manager.cookieJar,
-                    headers: {
-                        'User-Agent': config.trueUA,
-                    },
                 });
 
                 const content = load(detailResponse.data);

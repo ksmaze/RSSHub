@@ -53,7 +53,7 @@ const getFakeGot = (defaultOptions?: any) => {
 
         const cookieJar = options?.cookieJar;
         if (options.cookieJar) {
-            const cookies = options.cookieJar.getCookieStringSync(request);
+            const cookies = options.cookieJar.getCookieStringSync(request, { allPaths: true });
             // console.log('cookies', cookies);
             if (cookies) {
                 if (!options.headers) {

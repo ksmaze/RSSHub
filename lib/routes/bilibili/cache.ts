@@ -7,6 +7,7 @@ import logger from '@/utils/logger';
 import { getPuppeteerPage } from '@/utils/puppeteer';
 import { JSDOM } from 'jsdom';
 import { RateLimiterMemory, RateLimiterQueue } from 'rate-limiter-flexible';
+import { manager } from '@/utils/cookie-cloud';
 
 const subtitleLimiter = new RateLimiterMemory({
     points: 5,
@@ -18,7 +19,9 @@ const subtitleLimiterQueue = new RateLimiterQueue(subtitleLimiter, {
     maxQueueSize: 4800,
 });
 
-const getCookie = (disableConfig = false) => {
+const getCookie = async (disableConfig = false) => {
+    await manager.initial(config.cookieCloud);
+    return manager.cookieJar.getCookieStringSync('https://www.bilibili.com');
     if (Object.keys(config.bilibili.cookies).length > 0 && !disableConfig) {
         // Update b_lsid in cookies
         for (const key of Object.keys(config.bilibili.cookies)) {

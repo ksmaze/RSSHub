@@ -70,17 +70,17 @@ class CloudCookieManager {
                         continue;
                     }
                     // console.log('cookie_data', cookie_data);
+                    const url = `https://${key}`;
                     for (const item of cookie_data[key]) {
                         if (item.sameSite === 'unspecified') {
                             item.sameSite = 'Lax';
                         }
-                        const url = item.secure ? `https://${item.domain}` : `http://${item.domain}`;
                         // eslint-disable-next-line no-await-in-loop
                         await this.cookieJar.setCookie(
                             new Cookie({
                                 key: item.name,
                                 value: item.value,
-                                domain: item.domain,
+                                domain: key,
                                 path: item.path,
                                 expires: new Date(item.expirationDate * 1000),
                                 hostOnly: item.hostOnly,

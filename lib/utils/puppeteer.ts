@@ -130,9 +130,15 @@ export const getPuppeteerPage = async (
         endpointURL.searchParams.set('launch', JSON.stringify(options));
         endpointURL.searchParams.set('stealth', 'true');
         const endpoint = endpointURL.toString();
-        browser = await insidePuppeteer.connect({
-            browserWSEndpoint: endpoint,
-        });
+        logger.log('launch puppeteer with endpoint: ', endpoint);
+        try {
+            browser = await insidePuppeteer.connect({
+                browserWSEndpoint: endpoint,
+            });
+        } catch (error) {
+            logger.error('puppeteer connect failed', error);
+            throw error;
+        }
     } else {
         browser = await insidePuppeteer.launch(
             config.chromiumExecutablePath

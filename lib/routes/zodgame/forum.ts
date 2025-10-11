@@ -3,13 +3,12 @@ import { getCurrentPath } from '@/utils/helpers';
 const __dirname = getCurrentPath(import.meta.url);
 
 import cache from '@/utils/cache';
-import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 import { art } from '@/utils/render';
 import path from 'node:path';
 import { manager } from '@/utils/cookie-cloud';
+import { getPuppeteerPage } from '@/utils/puppeteer';
 import { config } from '@/config';
-import { JSDOM } from 'jsdom';
 
 const rootUrl = 'https://zodgame.xyz';
 
@@ -25,8 +24,8 @@ export const route: Route = {
                 description: '',
             },
         ],
-        requirePuppeteer: false,
-        antiCrawler: false,
+        requirePuppeteer: true,
+        antiCrawler: true,
         supportBT: false,
         supportPodcast: false,
         supportScihub: false,
@@ -43,13 +42,44 @@ async function handler(ctx) {
     const fid = ctx.req.param('fid');
     const subUrl = `${rootUrl}/api/mobile/index.php?version=4&module=forumdisplay&fid=${fid}&filter=author&orderby=dateline`;
 
-    const response = await got(subUrl, {
-        method: 'get',
-        cookieJar: manager.cookieJar,
-        parseResponse: JSON.parse,
+    const { page, destory } = await getPuppeteerPage(subUrl, {
+        gotoConfig: { waitUntil: 'domcontentloaded' },
+        onBeforeLoad: async (page, browser): Promise<void> => {
+            const toughCookies = manager.cookieJar.getCookiesSync(rootUrl);
+            const puppeteerCookies = toughCookies.map((c: any) => {
+                const sameSiteRaw = c.sameSite;
+                const sameSite = typeof sameSiteRaw === 'string' ? sameSiteRaw.charAt(0).toUpperCase() + sameSiteRaw.slice(1).toLowerCase() : undefined;
+                const cookie: any = {
+                    name: c.key,
+                    value: c.value,
+                    url: rootUrl,
+                    path: c.path || '/',
+                    httpOnly: c.httpOnly,
+                    secure: c.secure,
+                };
+                if (sameSite === 'Lax' || sameSite === 'Strict' || sameSite === 'None') {
+                    cookie.sameSite = sameSite;
+                }
+                if (c.expires && typeof c.expires.getTime === 'function') {
+                    const expires = Math.floor(c.expires.getTime() / 1000);
+                    if (Number.isFinite(expires) && expires > 0) {
+                        cookie.expires = expires;
+                    }
+                }
+                return cookie;
+            });
+            if (puppeteerCookies.length) {
+                await browser?.setCookie(...puppeteerCookies);
+            }
+        },
     });
 
-    const info = response.data.Variables;
+    const response = await page.evaluate(() =>
+        // Assuming the JSON is directly within the body's innerText
+        // or within a specific element, e.g., document.querySelector('#data').innerText
+         JSON.parse(document.querySelector('body')?.textContent || '{}')
+    );
+    const info = response.Variables;
 
     const threadList = info.forum_threadlist
         .map((item) => {
@@ -74,56 +104,15 @@ async function handler(ctx) {
     for (const item of threadList) {
         // eslint-disable-next-line no-await-in-loop
         const finalItem = (await cache.tryGet(item.tid, async () => {
-            const url = new URL(`${rootUrl}/api/mobile/index.php?version=4&module=viewthread&tid=${item.tid}`);
-            let threadResponse = await got(url, {
-                method: 'get',
-                cookieJar: manager.cookieJar,
-                parseResponse: JSON.parse,
-            });
+            const url = `${rootUrl}/api/mobile/index.php?version=4&module=viewthread&tid=${item.tid}`;
+            await page.goto(url, { waitUntil: 'domcontentloaded' });
+            const threadResponse = await page.evaluate(() =>
+                // Assuming the JSON is directly within the body's innerText
+                // or within a specific element, e.g., document.querySelector('#data').innerText
+                 JSON.parse(document.querySelector('body')?.textContent || '{}')
+            );
 
-            if (typeof threadResponse.data === 'string' && threadResponse.data.startsWith('<script type="text/javascript">')) {
-                const data = threadResponse.data;
-                let script = data.match(/<script type="text\/javascript">([\S\s]*?)<\/script>/)![1];
-                script = script.replaceAll('in()', 'funin()');
-                script = script.replace(/= location;|=location;/, '=fakeLocation;');
-                script = script.replace('location.replace', 'foo');
-                script = script.replace('location.assign', 'foo');
-                script = script.replace(/location\[[^\]]*]\(/, 'foo(');
-                script = script.replace(/location\[[^\]]*]=/, 'window.locationValue=');
-                script = script.replace('location.href=', 'window.locationValue=');
-                script = script.replace('location=', 'window.locationValue=');
-                const dom = new JSDOM(
-                    `<script>
-                function foo(value) { window.locationValue = value; };
-                fakeLocation = { href: '', replace: foo, assign: foo };
-                Object.defineProperty(fakeLocation, 'href', {
-                    set: function (value) {
-                        window.locationValue = value;
-                    }
-                });
-                ${script}
-            </script>`,
-                    {
-                        runScripts: 'dangerously',
-                    }
-                );
-                const locationValue = dom.window.locationValue;
-                if (locationValue) {
-                    // console.log('locationValue', locationValue);
-                    const searchParams = new URLSearchParams(locationValue);
-                    const _dsign = searchParams.get('_dsign');
-                    if (_dsign) {
-                        url.searchParams.set('_dsign', _dsign);
-                        threadResponse = await got(url, {
-                            method: 'get',
-                            cookieJar: manager.cookieJar,
-                            parseResponse: JSON.parse,
-                        });
-                    }
-                }
-            }
-
-            const threadInfo = threadResponse.data.Variables;
+            const threadInfo = threadResponse.Variables;
 
             let description = '';
 
@@ -154,6 +143,8 @@ async function handler(ctx) {
         })) as DataItem;
         items.push(finalItem);
     }
+
+    await destory();
 
     return {
         title: `${info.forum.name} - ZodGame论坛`,
