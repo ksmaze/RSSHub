@@ -32,7 +32,7 @@ const getCookie = async (disableConfig = false) => {
             }
         }
 
-        return config.bilibili.cookies[Object.keys(config.bilibili.cookies)[Math.floor(Math.random() * Object.keys(config.bilibili.cookies).length)]];
+        return config.bilibili.cookies[Object.keys(config.bilibili.cookies)[Math.floor(Math.random() * Object.keys(config.bilibili.cookies).length)]] || '';
     }
     const key = 'bili-cookie';
     return cache.tryGet(key, async () => {
@@ -262,16 +262,21 @@ const getVideoSubtitle = async (
         return [];
     }
 
-    const cookie = await getCookie();
     return cache.tryGet(`bili-video-subtitle-${bvid}`, async () => {
         await subtitleLimiterQueue.removeTokens(1);
-        const response = await got(`https://api.bilibili.com/x/player/wbi/v2?bvid=${bvid}&cid=${cid}`, {
-            headers: {
-                Referer: `https://www.bilibili.com/video/${bvid}`,
-                Cookie: cookie,
-            },
-        });
 
+        const getSubtitleData = async (cookie: string) => {
+            const response = await got(`https://api.bilibili.com/x/player/wbi/v2?bvid=${bvid}&cid=${cid}`, {
+                headers: {
+                    Referer: `https://www.bilibili.com/video/${bvid}`,
+                    Cookie: cookie,
+                },
+            });
+            return response;
+        };
+
+        const cookie = await getCookie();
+        const response = await getSubtitleData(cookie);
         const subtitles = response?.data?.data?.subtitle?.subtitles || [];
 
         return await Promise.all(
