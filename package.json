@@ -65,7 +65,6 @@
         "@opentelemetry/sdk-trace-base": "2.2.0",
         "@opentelemetry/semantic-conventions": "1.38.0",
         "@postlight/parser": "2.2.3",
-        "@rolldown/binding-linux-x64-gnu": "1.0.0-beta.42",
         "@rollup/rollup-linux-x64-gnu": "^4.52.4",
         "@rss3/sdk": "0.0.25",
         "@scalar/hono-api-reference": "0.9.24",
