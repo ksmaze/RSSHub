@@ -51,6 +51,8 @@ services:
             - rssforever
         volumes:
             - .:/app
+        command: npm run start
+        # command: npm run dev:cache
 
     browserless:
         # marked
@@ -64,7 +66,7 @@ services:
                 soft: 0 # marked
         healthcheck:
             test: [ "CMD", "curl", "-f", "http://localhost:3000/pressure" ]
-            interval: 30s
+            interval: 60s
             timeout: 10s
             retries: 3
         networks:
