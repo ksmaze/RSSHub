@@ -1,6 +1,8 @@
-import { DataItem, Route } from '@/types';
+import type { DataItem, Route } from '@/types';
 import got from '@/utils/got';
+
 import utils from './utils';
+
 const getLinkAndTitle = (type, period): { link: string; title: string } => {
     const baseURL = 'https://api.coolapk.com/v6/page/dataList?url=';
     let link;
