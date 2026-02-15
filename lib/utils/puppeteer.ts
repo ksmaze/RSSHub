@@ -71,6 +71,7 @@ export const getPuppeteerPage = async (
             waitUntil?: 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2';
         };
         noGoto?: boolean;
+        autoCloseMs?: number;
     } = {}
 ) => {
     const options = {
@@ -150,9 +151,15 @@ export const getPuppeteerPage = async (
         );
     }
 
-    setTimeout(async () => {
-        await browser.close();
-    }, 30000);
+    const autoCloseMs = instanceOptions.autoCloseMs ?? 30000;
+    const autoCloseTimer =
+        autoCloseMs > 0
+            ? setTimeout(async () => {
+                  if (browser.isConnected()) {
+                      await browser.close();
+                  }
+              }, autoCloseMs)
+            : null;
 
     const page = await browser.newPage();
 
@@ -187,7 +194,12 @@ export const getPuppeteerPage = async (
     return {
         page,
         destory: async () => {
-            await browser.close();
+            if (autoCloseTimer) {
+                clearTimeout(autoCloseTimer);
+            }
+            if (browser.isConnected()) {
+                await browser.close();
+            }
         },
         browser,
     };

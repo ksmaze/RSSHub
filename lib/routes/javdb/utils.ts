@@ -1,5 +1,4 @@
 import cache from '@/utils/cache';
-import got from '@/utils/got';
 import { load } from 'cheerio';
 import { parseDate } from '@/utils/parse-date';
 import { config } from '@/config';
@@ -7,6 +6,8 @@ import { config } from '@/config';
 import ConfigNotFoundError from '@/errors/types/config-not-found';
 import { manager } from '@/utils/cookie-cloud';
 import { DataItem } from '@/types';
+import { getFlareSolverrSession } from '@/utils/flaresolverr';
+import logger from '@/utils/logger';
 
 const allowDomain = new Set(['javdb.com', 'javdb36.com', 'javdb007.com', 'javdb521.com']);
 
@@ -19,40 +20,36 @@ const ProcessItems = async (ctx, currentUrl, title) => {
     }
 
     const rootUrl = `https://${domain}`;
+    logger.info(`go to url: ${url.href}`);
 
-    const response = await got({
-        method: 'get',
-        url: url.href,
-        cookieJar: manager.cookieJar,
-    });
+    const session = await getFlareSolverrSession();
+    try {
+        const { content: listHtml } = await session.get(url.href, { cookieJar: manager.cookieJar });
+        const $ = load(listHtml);
 
-    const $ = load(response.data);
+        $('.tags, .tag-can-play, .over18-modal').remove();
 
-    $('.tags, .tag-can-play, .over18-modal').remove();
+        const baseItems: DataItem[] = $('div.item')
+            .slice(0, ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 20)
+            .toArray()
+            .map((item) => {
+                const item2 = $(item);
+                return {
+                    title: item2.find('.video-title').text(),
+                    link: `${rootUrl}${item2.find('.box').attr('href')}`,
+                    pubDate: parseDate(item2.find('.meta').text()),
+                };
+            });
 
-    let items: DataItem[] = $('div.item')
-        .slice(0, ctx.req.query('limit') ? Number.parseInt(ctx.req.query('limit')) : 20)
-        .toArray()
-        .map((item) => {
-            const item2 = $(item);
-            return {
-                title: item2.find('.video-title').text(),
-                link: `${rootUrl}${item2.find('.box').attr('href')}`,
-                pubDate: parseDate(item2.find('.meta').text()),
-            };
-        });
+        const htmlTitle = $('title').text();
+        const subject = htmlTitle.includes('|') ? htmlTitle.split('|')[0] : '';
 
-    items = (await Promise.all(
-        items.map((item) =>
-            cache.tryGet(item.link as string, async () => {
-                await new Promise((resolve) => setTimeout(resolve, 5000));
-                const detailResponse = await got({
-                    method: 'get',
-                    url: item.link,
-                    cookieJar: manager.cookieJar,
-                });
-
-                const content = load(detailResponse.data);
+        const items: DataItem[] = [];
+        for (const item of baseItems) {
+            // eslint-disable-next-line no-await-in-loop
+            const detailItem = (await cache.tryGet(item.link as string, async () => {
+                const { content: detailHtml } = await session.get(item.link as string, { cookieJar: manager.cookieJar });
+                const content = load(detailHtml);
 
                 item.enclosure_type = 'application/x-bittorrent';
                 item.enclosure_url = content('#magnets-content button[data-clipboard-text]').first().attr('data-clipboard-text');
@@ -73,18 +70,21 @@ const ProcessItems = async (ctx, currentUrl, title) => {
                 item.description = [content('.cover-container, .column-video-cover').html(), content('.movie-panel-info').html(), content('#magnets-content').html(), content('.preview-images').html()].join('');
 
                 return item;
-            })
-        )
-    )) as DataItem[];
+            })) as DataItem;
+            items.push(detailItem);
+        }
 
-    const htmlTitle = $('title').text();
-    const subject = htmlTitle.includes('|') ? htmlTitle.split('|')[0] : '';
-
-    return {
-        title: subject === '' ? title : `${subject} - ${title}`,
-        link: url.href,
-        item: items,
-    };
+        return {
+            title: subject === '' ? title : `${subject} - ${title}`,
+            link: url.href,
+            item: items,
+        };
+    } catch (error) {
+        logger.error(`Error while processing JavDB route ${url.href}`, error);
+        throw error;
+    } finally {
+        await session.destroy();
+    }
 };
 
 export default { ProcessItems };

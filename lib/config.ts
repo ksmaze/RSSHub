@@ -81,6 +81,10 @@ export type Config = {
     };
     suffix?: string;
     titleLengthLimit: number;
+    flaresolverr: {
+        url?: string;
+        maxTimeout: number;
+    };
     cookieCloud: CloudCookieConfig;
     openai: {
         apiKey?: string;
@@ -553,6 +557,10 @@ const calculateValue = () => {
         },
         suffix: envs.SUFFIX,
         titleLengthLimit: toInt(envs.TITLE_LENGTH_LIMIT, 150),
+        flaresolverr: {
+            url: envs.FLARESOLVERR_URL,
+            maxTimeout: toInt(envs.FLARESOLVERR_MAX_TIMEOUT, 60000),
+        },
         cookieCloud: {
             host: envs.COOKIE_CLOUD_HOST,
             uuid: envs.COOKIE_CLOUD_UUID,
