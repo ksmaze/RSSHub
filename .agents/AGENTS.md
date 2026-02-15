@@ -3,7 +3,7 @@
 ## Build & Test
 
 - **Build**: `pnpm build` from the project root.
-- **Test full stack**: `docker-compose down --remove-orphans && docker-compose up -d` to restart all services defined in `docker-compose.yml`.
+- **Test full stack**: `docker compose up -d --remove-orphans` to apply changes and restart affected services defined in `docker-compose.yml`. Compose diffs running state against the YAML and only recreates containers whose config changed (ports, volumes, image, env, etc.).
 - **Verify routes**: After stack is up, fetch from the RSSHub endpoint. For example, `lib/routes/x1080x/forum.ts` serves `http://localhost:13828/x1080x/forum/263`.
 
 ## Docker Stack (`docker-compose.yml`)

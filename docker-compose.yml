@@ -35,8 +35,8 @@ services:
     rsshub:
         image: diygod/rsshub:latest
         restart: always
-        ports:
-            - 13828:13828
+        # ports:
+        #     - 13828:13828
         environment:
             PORT: 13828
             NODE_ENV: production

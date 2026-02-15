@@ -39,3 +39,5 @@ freshrss-data
 freshrss-extensions
 db
 *.pyc
+
+scripts/others/
