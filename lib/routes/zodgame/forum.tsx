@@ -1,15 +1,12 @@
-import { DataItem, Route } from '@/types';
-import { getCurrentPath } from '@/utils/helpers';
-const __dirname = getCurrentPath(import.meta.url);
+import { load } from 'cheerio';
+import { renderToString } from 'hono/jsx/dom/server';
 
+import { config } from '@/config';
+import type { DataItem, Route } from '@/types';
 import cache from '@/utils/cache';
-import { parseDate } from '@/utils/parse-date';
-import { art } from '@/utils/render';
-import path from 'node:path';
 import { manager } from '@/utils/cookie-cloud';
 import { getFlareSolverrSession } from '@/utils/flaresolverr';
-import { config } from '@/config';
-import { load } from 'cheerio';
+import { parseDate } from '@/utils/parse-date';
 
 const rootUrl = 'https://zodgame.xyz';
 
@@ -87,9 +84,7 @@ async function handler(ctx) {
                     description += threadInfo.thread.freemessage;
                 }
                 if (threadInfo?.postlist) {
-                    description += art(path.join(__dirname, 'templates/forum.art'), {
-                        content: threadInfo.postlist[0].message,
-                    });
+                    description += renderDescription(threadInfo.postlist[0].message);
                 }
 
                 return {
@@ -118,3 +113,12 @@ async function handler(ctx) {
         await session.destroy();
     }
 }
+
+const renderDescription = (content: string): string =>
+    renderToString(
+        <>
+            <br />
+            <br />
+            <span>{content}</span>
+        </>
+    );

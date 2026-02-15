@@ -2,10 +2,10 @@
 
 ## Build & Test
 
-- **Build**: `pnpm build` from the project root.
+- **Build**: `pnpm build` from the project root. This is the canonical way to verify code compiles correctly (handles path aliases, JSX, etc.). Do NOT use `npx tsc` or `npx tsc --noEmit` — it is slow on the full project and `pnpm build` already catches compilation errors.
 - **Apply compose config changes** (ports, volumes, image, env): `docker-compose up -d --remove-orphans`. Compose diffs running state against the YAML and only recreates containers whose config changed.
 - **Restart after code/build changes** (mounted volume contents changed): `docker-compose restart rsshub` (or any specific service). Compose does NOT detect file content changes inside mounts.
-- **Verify routes**: After stack is up, fetch from the RSSHub endpoint. For example, `lib/routes/x1080x/forum.ts` serves `http://localhost:13828/x1080x/forum/263`.
+- **Verify routes**: After stack is up, fetch from the RSSHub endpoint. For example, `lib/routes/x1080x/forum.tsx` serves `http://localhost:13828/x1080x/forum/263`.
 
 ## Docker Stack (`docker-compose.yml`)
 
@@ -18,6 +18,7 @@
 ## Key Utilities
 
 ### `lib/utils/flaresolverr.ts`
+
 - Wraps the FlareSolverr API (`POST /v1`) with session management.
 - `getFlareSolverrSession()` creates a session and returns `{ get, post, destroy }`.
 - `get(url, { cookieJar?, maxTimeout? })` fetches a URL via FlareSolverr `request.get`, syncs cookies from/to a `tough-cookie` CookieJar.
@@ -26,18 +27,22 @@
 - Config: `FLARESOLVERR_URL` env var (e.g. `http://flaresolverr:8191`), `FLARESOLVERR_MAX_TIMEOUT` (default `60000`).
 
 ### `lib/utils/puppeteer.ts`
+
 - `getPuppeteerPage(url, options)` launches a Puppeteer browser, returns `{ page, destory, browser }`.
 - Connects via `PUPPETEER_WS_ENDPOINT` (browserless) or launches locally.
 
 ### `lib/utils/cookie-cloud.ts`
+
 - `manager` singleton with a `cookieJar` (tough-cookie `CookieJar`).
 - Call `manager.initial(config.cookieCloud)` to start syncing cookies from CookieCloud.
 - Use `manager.cookieJar` to pass cookies to flaresolverr/puppeteer/got.
 
 ### `lib/utils/got.ts` / `lib/utils/ofetch.ts`
+
 - HTTP clients with retry, proxy, and cookie jar support.
 
 ## Config (`lib/config.ts`)
+
 - All configuration via env vars, read in `calculateValue()`.
 - Type defined as `Config`, exported as `config`.
 - Route-specific configs (cookies, tokens) under named keys (e.g. `config.bilibili`, `config.twitter`).

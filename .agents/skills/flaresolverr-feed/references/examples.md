@@ -2,9 +2,9 @@
 
 ## Pattern A: HTML Forum Scraping (x1080x)
 
-Fetches a Discuz forum listing page, parses thread rows with cheerio, then fetches each thread's detail page for full content.
+Fetches a Discuz forum listing page, parses thread rows with cheerio, then fetches each thread's detail page for full content. Uses JSX `renderToString` for description rendering.
 
-**Source:** `lib/routes/x1080x/forum.ts`
+**Source:** `lib/routes/x1080x/forum.tsx`
 
 ```typescript
 import { DataItem, Route } from '@/types';
@@ -13,9 +13,8 @@ const __dirname = getCurrentPath(import.meta.url);
 
 import cache from '@/utils/cache';
 import { parseDate } from '@/utils/parse-date';
-import { art } from '@/utils/render';
+import { renderToString } from 'hono/jsx/dom/server';
 import { manager } from '@/utils/cookie-cloud';
-import path from 'node:path';
 import { getFlareSolverrSession } from '@/utils/flaresolverr';
 import { config } from '@/config';
 import { load } from 'cheerio';
@@ -70,14 +69,14 @@ async function handler(ctx) {
                 const contentEl = $thread('#postlist .t_f').first();
                 const content = contentEl.html();
                 if (content) {
-                    description += art(path.join(__dirname, 'templates/forum.art'), { content });
+                    description += renderDescription(content);
                 }
                 const firstImg = contentEl.find('img').first();
-                const enclosure_url = firstImg.length ? firstImg.attr('src') : undefined;
+                const enclosureUrl = firstImg.length ? firstImg.attr('src') : undefined;
                 return {
                     title: item.title, author: item.author, link: item.link,
                     description, pubDate: item.pubDate, guid: item.tid,
-                    ...(enclosure_url ? { enclosure_url } : {}),
+                    ...(enclosureUrl ? { enclosure_url: enclosureUrl } : {}),
                 } as DataItem;
             })) as DataItem;
             items.push(finalItem);
@@ -92,13 +91,18 @@ async function handler(ctx) {
         await session.destroy();
     }
 }
+
+const renderDescription = (content: string): string =>
+    renderToString(
+        <span>{content}</span>
+    );
 ```
 
 ## Pattern B: JSON API via FlareSolverr (zodgame)
 
-The target site returns JSON from its mobile API, but is behind Cloudflare. FlareSolverr returns HTML wrapping the JSON body. Extract with `load(html)('body').text()`.
+The target site returns JSON from its mobile API, but is behind Cloudflare. FlareSolverr returns HTML wrapping the JSON body. Extract with `load(html)('body').text()`. Uses JSX `renderToString` for description rendering.
 
-**Source:** `lib/routes/zodgame/forum.ts`
+**Source:** `lib/routes/zodgame/forum.tsx`
 
 ```typescript
 import { DataItem, Route } from '@/types';
@@ -107,7 +111,7 @@ const __dirname = getCurrentPath(import.meta.url);
 
 import cache from '@/utils/cache';
 import { parseDate } from '@/utils/parse-date';
-import { art } from '@/utils/render';
+import { renderToString } from 'hono/jsx/dom/server';
 import path from 'node:path';
 import { manager } from '@/utils/cookie-cloud';
 import { getFlareSolverrSession } from '@/utils/flaresolverr';
@@ -163,9 +167,7 @@ async function handler(ctx) {
                     description += threadInfo.thread.freemessage;
                 }
                 if (threadInfo?.postlist) {
-                    description += art(path.join(__dirname, 'templates/forum.art'), {
-                        content: threadInfo.postlist[0].message,
-                    });
+                    description += renderDescription(threadInfo.postlist[0].message);
                 }
                 return {
                     title: item.title, author: item.author, link: item.link,
@@ -188,6 +190,15 @@ async function handler(ctx) {
         await session.destroy();
     }
 }
+
+const renderDescription = (content: string): string =>
+    renderToString(
+        <>
+            <br />
+            <br />
+            <span>{content}</span>
+        </>
+    );
 ```
 
 ## Pattern C: Converting Puppeteer to FlareSolverr (javdb)
