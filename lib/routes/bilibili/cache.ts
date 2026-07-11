@@ -1,10 +1,10 @@
 import { load } from 'cheerio';
 import { JSDOM } from 'jsdom';
 import { RateLimiterMemory, RateLimiterQueue } from 'rate-limiter-flexible';
-import { manager } from '@/utils/cookie-cloud';
 
 import { config } from '@/config';
 import cache from '@/utils/cache';
+import { manager } from '@/utils/cookie-cloud';
 import got from '@/utils/got';
 import logger from '@/utils/logger';
 import { getPlaywrightPage } from '@/utils/playwright';
@@ -21,24 +21,31 @@ const subtitleLimiterQueue = new RateLimiterQueue(subtitleLimiter, {
     maxQueueSize: 4800,
 });
 
-const getCookie = async (disableConfig = false) => {
+const getConfiguredCookie = async () => {
     await manager.initial(config.cookieCloud);
-    return manager.cookieJar.getCookieStringSync('https://www.bilibili.com');
-    if (Object.keys(config.bilibili.cookies).length > 0 && !disableConfig) {
-        // Update b_lsid in cookies
-        for (const key of Object.keys(config.bilibili.cookies)) {
-            const cookie = config.bilibili.cookies[key];
-            if (cookie) {
-                const updatedCookie = cookie.replace(/b_lsid=[0-9A-F]+_[0-9A-F]+/, `b_lsid=${utils.lsid()}`);
-                config.bilibili.cookies[key] = updatedCookie;
-            }
+    const cloudCookie = manager.cookieJar.getCookieStringSync('https://www.bilibili.com');
+    if (cloudCookie) {
+        return cloudCookie;
+    }
+
+    if (Object.keys(config.bilibili.cookies).length === 0) {
+        return;
+    }
+
+    // Update b_lsid in cookies
+    for (const key of Object.keys(config.bilibili.cookies)) {
+        const cookie = config.bilibili.cookies[key];
+        if (cookie) {
+            const updatedCookie = cookie.replace(/b_lsid=[0-9A-F]+_[0-9A-F]+/, () => `b_lsid=${utils.lsid()}`);
+            config.bilibili.cookies[key] = updatedCookie;
         }
+    }
 
     return config.bilibili.cookies[Object.keys(config.bilibili.cookies)[Math.floor(Math.random() * Object.keys(config.bilibili.cookies).length)]] || '';
 };
 
-const getCookie = (disableConfig = false) => {
-    const configuredCookie = disableConfig ? undefined : getConfiguredCookie();
+const getCookie = async (disableConfig = false) => {
+    const configuredCookie = disableConfig ? undefined : await getConfiguredCookie();
     if (configuredCookie !== undefined) {
         return configuredCookie;
     }
