@@ -87,6 +87,10 @@ async function handler(ctx) {
                     description += renderDescription(threadInfo.postlist[0].message);
                 }
 
+                const $desc = load(description);
+                const firstImg = $desc('img').first();
+                const enclosureUrl = firstImg.length ? firstImg.attr('src') : undefined;
+
                 return {
                     title: item.title,
                     author: item.author,
@@ -98,6 +102,7 @@ async function handler(ctx) {
                     upvotes: Number.parseInt(threadInfo?.thread?.recommend_add, 10),
                     downvotes: Number.parseInt(threadInfo?.thread?.recommend_sub, 10),
                     comments: Number.parseInt(threadInfo?.thread?.replies, 10),
+                    ...(enclosureUrl ? { image: enclosureUrl } : {}),
                 } as DataItem;
             })) as DataItem;
             items.push(finalItem);
