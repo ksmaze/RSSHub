@@ -43,11 +43,10 @@ services:
             CACHE_TYPE: redis
             REDIS_URL: 'redis://redis:6379/'
             # PUPPETEER_WS_ENDPOINT: "ws://browserless:3000" # marked
-            NODE_TLS_REJECT_UNAUTHORIZED: '0'
-            FLARESOLVERR_URL: 'http://trawl:8191'
+            NODE_TLS_REJECT_UNAUTHORIZED: "0"
         depends_on:
             - redis
-            - trawl
+            - flaresolverr
             # - browserless # marked
         networks:
             - rssforever
@@ -56,22 +55,33 @@ services:
         command: npm run start
         # command: npm run dev:cache
 
-    trawl:
-        image: ghcr.io/germondai/trawl:latest
-        ports:
-            - '8191:8191'
-        shm_size: 1gb
+    # browserless:
+    #     # marked
+    #     image: browserless/chrome:latest # marked
+    #     restart: always # marked
+    #     ulimits:
+    #         # marked
+    #         core:
+    #             # marked
+    #             hard: 0 # marked
+    #             soft: 0 # marked
+    #     healthcheck:
+    #         test: [ "CMD", "curl", "-f", "http://localhost:3000/pressure" ]
+    #         interval: 60s
+    #         timeout: 10s
+    #         retries: 3
+    #     networks:
+    #         - rssforever
+
+    flaresolverr:
+        # DockerHub mirror flaresolverr/flaresolverr:latest
+        image: ghcr.io/flaresolverr/flaresolverr:latest
+        container_name: flaresolverr
         environment:
-            REDIS_URL: redis://redis:6379
-            BROWSER_POOL_SIZE: 1
-        depends_on:
-            - redis
-        healthcheck:
-            test: ['CMD', 'curl', '-sf', 'http://localhost:8191/health']
-            interval: 60s
-            timeout: 10s
-            retries: 3
-            start_period: 90s
+        - LOG_LEVEL=${LOG_LEVEL:-info}
+        - LOG_HTML=${LOG_HTML:-false}
+        - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+        - TZ=America/Los_Angeles
         restart: always
         networks:
             - rssforever
@@ -86,6 +96,12 @@ services:
         networks:
             - rssforever
 
+    # feed-aggregator:
+    #     image: feed-aggregator:latest
+    #     restart: always
+    #     networks:
+    #         - rssforever
+
     # ---------------------------------------- watchtower ---------------------------------------- #
     # 每天早上 6 点定时更新 RSSHub , 如无需可注释或删除本段.
     watchtower:
@@ -97,6 +113,6 @@ services:
             - WATCHTOWER_CLEANUP=true
             - WATCHTOWER_SCHEDULE=0 0 6 * * *
         restart: always
-        command: rsshub-watchtower-1 rsshub-rsshub-1 rsshub-service.rss-1 rsshub-redis-1 rsshub-trawl-1
+        command: rsshub-watchtower-1 rsshub-rsshub-1 rsshub-service.rss-1 rsshub-redis-1 rsshub-flaresolverr-1
         networks:
             - rssforever
