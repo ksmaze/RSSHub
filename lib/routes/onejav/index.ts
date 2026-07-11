@@ -1,5 +1,6 @@
-import { Route } from '@/types';
 import { load } from 'cheerio';
+
+import type { Route } from '@/types';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
 
@@ -24,7 +25,7 @@ async function handler(ctx) {
     const rootUrl = 'https://onejav.com';
     const urlObj = new URL(rootUrl);
     urlObj.pathname = query;
-    const url = urlObj.toString();
+    const url = urlObj.href;
     const response = await got({
         method: 'get',
         url,

@@ -8,6 +8,7 @@ import logger from '@/utils/logger';
 declare module 'ofetch' {
     interface FetchOptions {
         headerGeneratorOptions?: Partial<HeaderGeneratorOptions>;
+        retry?: number | false;
     }
 }
 
@@ -18,6 +19,10 @@ const rofetch = createFetch({ fetch: (input: Parameters<typeof fetch>[0], init?:
     retry: config.requestRetry,
     retryDelay: 1000,
     // timeout: config.requestTimeout,
+    onRequest({ options }) {
+        // Use the retry option if provided, otherwise use the default from config
+        options.retry = options.retry === undefined ? config.requestRetry : options.retry;
+    },
     onResponseError({ request, response, options }) {
         if (!options.retry) {
             return;

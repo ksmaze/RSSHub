@@ -1,13 +1,12 @@
-import { type Data, type Route, ViewType } from '@/types';
-
+import { load } from 'cheerio';
 import { type Context } from 'hono';
 
+import { type Data, type Route, ViewType } from '@/types';
 import got from '@/utils/got';
-import { load } from 'cheerio';
 import { parseDate } from '@/utils/parse-date';
 
 export const handler = async (ctx: Context): Promise<Data> => {
-    const limit: number = Number.parseInt(ctx.req.query('limit') ?? '20', 10);
+    const limit: number = Math.trunc(Number(ctx.req.query('limit') ?? '20'));
 
     const rootUrl = 'https://alphasignal.ai';
     const currentUrl = `${rootUrl}/last-email`;

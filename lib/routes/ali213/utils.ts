@@ -1,8 +1,8 @@
-import type { DataItem } from '@/types';
-
-import ofetch from '@/utils/ofetch';
 import { load } from 'cheerio';
+
+import type { DataItem } from '@/types';
 import cache from '@/utils/cache';
+import ofetch from '@/utils/ofetch';
 
 interface idNameMap {
     type: string;
@@ -56,6 +56,6 @@ export const getArticle = (item) => {
 };
 
 export const mdTableBuilder = (data: idNameMap[]) => {
-    const table = '|' + data.map((item) => `${item.type}|`).join('') + '\n|' + Array.from({ length: data.length }).fill('---|').join('') + '\n|' + data.map((item) => `${item.name}|`).join('') + '\n';
+    const table = '|' + data.map((item) => `${item.type}|`).join('') + '\n|' + Array.from({ length: data.length }, () => '---|').join('') + '\n|' + data.map((item) => `${item.name}|`).join('') + '\n';
     return table;
 };

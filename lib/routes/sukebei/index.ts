@@ -1,8 +1,9 @@
-import { DataItem, Route } from '@/types';
-import cache from '@/utils/cache';
-import got from '@/utils/got';
 import { load } from 'cheerio';
 import Parser from 'rss-parser';
+
+import type { DataItem, Route } from '@/types';
+import cache from '@/utils/cache';
+import got from '@/utils/got';
 
 const categories = {
     av: '2_2',
@@ -33,7 +34,7 @@ async function handler(ctx) {
     const urlObj = new URL('https://sukebei.nyaa.si/?page=rss&f=0');
     urlObj.searchParams.set('c', c);
     urlObj.searchParams.set('q', query);
-    const url = urlObj.toString();
+    const url = urlObj.href;
     const parser = new Parser();
     const response = await got({
         method: 'get',
@@ -65,7 +66,7 @@ async function handler(ctx) {
             });
             const descMatch = html?.match(/id="torrent-description">([\s\S]*?)<\/div>/);
             if (descMatch) {
-                const urls = descMatch[1].match(/https?:\/\/imagetwist\.com\/[\w-]+\/[\w\-_]+\.jpg/g) || [];
+                const urls = descMatch[1].match(/https?:\/\/imagetwist\.com\/[\w-]+\/[\w-]+\.jpg/g) || [];
                 if (urls.length > 0) {
                     const href = urls[0];
                     // eslint-disable-next-line no-await-in-loop

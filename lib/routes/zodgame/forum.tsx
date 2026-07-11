@@ -42,16 +42,16 @@ async function handler(ctx) {
 
     const session = await getFlareSolverrSession();
     try {
-        const { content: listHtml } = await session.get(subUrl, { cookieJar: manager.cookieJar });
+        const { content: listHtml } = await session.get(subUrl, { cookieJar: manager.cookieJar, retry: 0 });
         const response = JSON.parse(load(listHtml)('body').text() || '{}');
         const info = response.Variables;
 
         const threadList = info.forum_threadlist
             .map((item) => {
-                if (!info.threadtypes.types[item.typeid]) {
+                const type = info.threadtypes.types[item.typeid];
+                if (!type) {
                     return;
                 }
-                const type = info.threadtypes.types[item.typeid];
 
                 return {
                     tid: item.tid,
@@ -70,7 +70,7 @@ async function handler(ctx) {
             // eslint-disable-next-line no-await-in-loop
             const finalItem = (await cache.tryGet(item.tid, async () => {
                 const url = `${rootUrl}/api/mobile/index.php?version=4&module=viewthread&tid=${item.tid}`;
-                const { content: threadHtml } = await session.get(url, { cookieJar: manager.cookieJar });
+                const { content: threadHtml } = await session.get(url, { cookieJar: manager.cookieJar, retry: 0 });
                 const threadResponse = JSON.parse(load(threadHtml)('body').text() || '{}');
 
                 const threadInfo = threadResponse.Variables;
@@ -99,10 +99,10 @@ async function handler(ctx) {
                     category: item.category,
                     pubDate: item.pubDate,
                     guid: item.tid,
-                    upvotes: Number.parseInt(threadInfo?.thread?.recommend_add, 10),
-                    downvotes: Number.parseInt(threadInfo?.thread?.recommend_sub, 10),
-                    comments: Number.parseInt(threadInfo?.thread?.replies, 10),
-                    ...(enclosureUrl ? { image: enclosureUrl } : {}),
+                    upvotes: Math.trunc(Number(threadInfo?.thread?.recommend_add)),
+                    downvotes: Math.trunc(Number(threadInfo?.thread?.recommend_sub)),
+                    comments: Math.trunc(Number(threadInfo?.thread?.replies)),
+                    ...(enclosureUrl && { image: enclosureUrl }),
                 } as DataItem;
             })) as DataItem;
             items.push(finalItem);

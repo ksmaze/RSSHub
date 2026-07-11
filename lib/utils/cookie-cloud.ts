@@ -1,5 +1,5 @@
-import CryptoJS from 'crypto-js';
 import { CronJob } from 'cron';
+import CryptoJS from 'crypto-js';
 import { Cookie, CookieJar, MemoryCookieStore } from 'tough-cookie';
 
 export interface CloudCookieConfig {
@@ -37,25 +37,25 @@ class CloudCookieManager {
     job: CronJob<null, CloudCookieManager> | undefined;
     cookieJar = new CookieJar(new MemoryCookieStore(), { rejectPublicSuffixes: false });
 
-    CloudCookieManager() {}
-
     initial = async (config: CloudCookieConfig): Promise<void> => {
-        if (this.host === undefined) {
-            this.host = config.host;
-            this.uuid = config.uuid;
-            this.password = config.password;
-
-            this.job = CronJob.from({
-                cronTime: config.updateCron,
-                onTick: async (): Promise<void> => {
-                    await this.fetchCookies();
-                },
-                context: this,
-                start: true,
-                runOnInit: false,
-            });
-            await this.fetchCookies();
+        if (this.host !== undefined) {
+            return;
         }
+
+        this.host = config.host;
+        this.uuid = config.uuid;
+        this.password = config.password;
+
+        this.job = CronJob.from({
+            cronTime: config.updateCron,
+            onTick: async (): Promise<void> => {
+                await this.fetchCookies();
+            },
+            context: this,
+            start: true,
+            runOnInit: false,
+        });
+        await this.fetchCookies();
     };
 
     fetchCookies = async () => {
@@ -71,7 +71,8 @@ class CloudCookieManager {
                     }
                     // console.log('cookie_data', cookie_data);
                     const url = `https://${key}`;
-                    for (const item of cookie_data[key]) {
+                    const cookies = cookie_data[key];
+                    for (const item of cookies) {
                         if (item.sameSite === 'unspecified') {
                             item.sameSite = 'Lax';
                         }
@@ -103,6 +104,8 @@ class CloudCookieManager {
         const decrypted = CryptoJS.AES.decrypt(encrypted, the_key).toString(CryptoJS.enc.Utf8);
         return JSON.parse(decrypted) as DecryptedData;
     };
+
+    CloudCookieManager() {}
 
     setCookie(domain: string, name: string | undefined, value: string) {
         if (name) {

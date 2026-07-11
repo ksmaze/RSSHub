@@ -1,7 +1,9 @@
 import 'dotenv/config';
 
 import { ofetch } from 'ofetch';
-import { CloudCookieConfig, manager } from '@/utils/cookie-cloud';
+
+import type { CloudCookieConfig } from '@/utils/cookie-cloud';
+import { manager } from '@/utils/cookie-cloud';
 
 type ConfigEnvKeys =
     // App config

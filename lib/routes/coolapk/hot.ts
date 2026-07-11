@@ -79,17 +79,17 @@ const getLinkAndTitle = (type, period): { link: string; title: string } => {
                     statDays: '30days',
                 },
             };
-            link = `#/feed/coolPictureList?statDays=` + trans[period].statDays + `&listType=statFavNum&buildCard=1&title=` + trans[period].description + `&page=1`;
+            link = '#/feed/coolPictureList?statDays=' + trans[period].statDays + '&listType=statFavNum&buildCard=1&title=' + trans[period].description + '&page=1';
             return {
                 link: baseURL + encodeURIComponent(link),
                 title: '酷图榜-' + trans[period].description,
             };
         }
         default:
-            link = `#/feed/statList?statType=` + periods[period].statType + `&sortField=` + types[type].sortField + `&title=` + periods[period].description + `&page=1`;
+            link = '#/feed/statList?statType=' + periods[period].statType + '&sortField=' + types[type].sortField + '&title=' + periods[period].description + '&page=1';
             return {
                 link: baseURL + encodeURIComponent(link),
-                title: types[type].title + `-` + periods[period].description,
+                title: types[type].title + '-' + periods[period].description,
             };
     }
 };
@@ -117,16 +117,16 @@ export const route: Route = {
     maintainers: ['xizeyoupan'],
     handler,
     description: `| 参数名称 | 今日热门 | 每日热闻 | 点赞榜 | 评论榜 | 收藏榜 | 酷图榜 |
-  | -------- | -------- | ------ | ------ | ------ | ------ | ------ |
-  | type     | jrrm     | mrrw    | dzb    | plb    | scb    | ktb    |
+| -------- | -------- | -------- | ------ | ------ | ------ | ------ |
+| type     | jrrm     | mrrw     | dzb    | plb    | scb    | ktb    |
 
-  | 参数名称 | 日榜  | 周榜   |
-  | -------- | ----- | ------ |
-  | period   | daily | weekly |
+| 参数名称 | 日榜  | 周榜   |
+| -------- | ----- | ------ |
+| period   | daily | weekly |
 
-  :::tip
+::: tip
 今日热门没有周榜，酷图榜日榜的参数会变成周榜，周榜的参数会变成月榜。
-  :::`,
+:::`,
 };
 
 async function handler(ctx) {
@@ -150,12 +150,12 @@ async function handler(ctx) {
         }
     }
 
-    const out: (DataItem | undefined)[] = await Promise.all(t.map((item) => utils.parseDynamic(item)));
+    const out: Array<DataItem | undefined> = await Promise.all(t.map((item) => utils.parseDynamic(item)));
 
     return {
         title,
         link: 'https://www.coolapk.com/',
-        description: `feedId:85083087057291264+userId:77884867866416128`,
+        description: 'feedId:85083087057291264+userId:77884867866416128',
         item: out.filter(Boolean) as DataItem[],
     };
 }

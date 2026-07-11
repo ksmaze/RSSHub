@@ -1,3 +1,6 @@
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+
 import { load } from 'cheerio';
 import { renderToString } from 'hono/jsx/dom/server';
 
@@ -6,6 +9,7 @@ import type { DataItem, Route } from '@/types';
 import cache from '@/utils/cache';
 import { manager } from '@/utils/cookie-cloud';
 import { getFlareSolverrSession } from '@/utils/flaresolverr';
+import logger from '@/utils/logger';
 import { parseDate } from '@/utils/parse-date';
 
 const rootUrl = 'https://x999x.me';
@@ -33,15 +37,16 @@ async function handler(ctx) {
     const fid = ctx.req.param('fid');
     const subUrl = `${rootUrl}/forum.php?mod=forumdisplay&fid=${fid}&orderby=dateline`;
 
-    const session = await getFlareSolverrSession();
+    let session;
     try {
+        session = await getFlareSolverrSession();
         const totalPages = 8;
         const threadList: Array<{ tid: string; title: string; link: string; author: string; pubDate: ReturnType<typeof parseDate> }> = [];
 
         for (let page = 1; page <= totalPages; page++) {
             const pageUrl = page === 1 ? subUrl : `${subUrl}&page=${page}`;
             // eslint-disable-next-line no-await-in-loop
-            const { content: listHtml } = await session.get(pageUrl, { cookieJar: manager.cookieJar });
+            const { content: listHtml } = await session.get(pageUrl, { cookieJar: manager.cookieJar, retry: 0 });
             const $ = load(listHtml);
 
             // example: <a href="https://x999x.me/forum.php?mod=viewthread&amp;tid=973225&amp;extra=page%3D1%26orderby%3Ddateline" onclick="atarget(this)" class="xst">[115](JAVPLAYER)ROE-353 父親再婚一個月後，繼母強迫我吃下含有催情劑的食物，吉永塔子[1V／MP4／9.3G]</a>
@@ -80,7 +85,7 @@ async function handler(ctx) {
         for (const item of threadList) {
             // eslint-disable-next-line no-await-in-loop
             const finalItem = (await cache.tryGet(item.tid, async () => {
-                const { content: threadHtml } = await session.get(item.link, { cookieJar: manager.cookieJar });
+                const { content: threadHtml } = await session.get(item.link, { cookieJar: manager.cookieJar, retry: 0 });
                 const $thread = load(threadHtml);
 
                 // Get thread description from page: #postlist .t_f
@@ -101,7 +106,7 @@ async function handler(ctx) {
                     description,
                     pubDate: item.pubDate,
                     guid: item.tid,
-                    ...(enclosureUrl ? { image: enclosureUrl } : {}),
+                    ...(enclosureUrl && { image: enclosureUrl }),
                 } as DataItem;
             })) as DataItem;
             items.push(finalItem);
@@ -113,9 +118,23 @@ async function handler(ctx) {
             description: 'feedId:80392673247327232+userId:77884867866416128',
             item: items,
         };
+    } catch (error) {
+        logger.warn(`FlareSolverr failed for x1080x/forum/${fid}: ${error}, falling back to local x1080x.json`);
+        return await loadLocalFeed(fid);
     } finally {
-        await session.destroy();
+        await session?.destroy();
     }
+}
+
+async function loadLocalFeed(fid: string) {
+    const jsonPath = path.join(__dirname, 'x1080x.json');
+    const raw = await readFile(jsonPath, 'utf-8');
+    const data = JSON.parse(raw) as Record<string, { title: string; link: string; description: string; item: DataItem[] }>;
+    const feed = data[fid];
+    if (!feed) {
+        throw new Error(`No fallback feed found for fid ${fid} in x1080x.json`);
+    }
+    return feed;
 }
 
 const renderDescription = (content: string): string => renderToString(<span>{content}</span>);

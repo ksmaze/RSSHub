@@ -63,7 +63,7 @@ export const handler = async (): Promise<Data> => {
     let sessionResponse: SessionResponse;
 
     try {
-        const { content } = await session.get(sessionUrl, { cookieJar: manager.cookieJar });
+        const { content } = await session.get(sessionUrl, { cookieJar: manager.cookieJar, retry: 0 });
         sessionResponse = JSON.parse(load(content)('body').text() || '{}');
     } finally {
         await session.destroy();
@@ -80,7 +80,12 @@ export const handler = async (): Promise<Data> => {
             Authorization: `Bearer ${token}`,
             Origin: rootUrl,
         },
-        body: {},
+        body: {
+            page: 1,
+            limit: 20,
+            sort: 'latest',
+            timeframe: 'latest',
+        },
     });
 
     if (!response.success || !response.data?.data) {
