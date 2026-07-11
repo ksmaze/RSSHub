@@ -9,7 +9,7 @@ import { DataItem } from '@/types';
 import { getFlareSolverrSession } from '@/utils/flaresolverr';
 import logger from '@/utils/logger';
 
-const allowDomain = new Set(['javdb.com', 'javdb36.com', 'javdb007.com', 'javdb521.com']);
+const allowDomain = new Set(['javdb.com', 'javdb571.com', 'javdb36.com', 'javdb007.com', 'javdb521.com']);
 
 const ProcessItems = async (ctx, currentUrl, title) => {
     await manager.initial(config.cookieCloud);
@@ -58,9 +58,9 @@ const ProcessItems = async (ctx, currentUrl, title) => {
                 content('#modal-review-watched, #modal-comment-warning, #modal-save-list').remove();
                 content('.review-buttons, .copy-to-clipboard, .preview-video-container, .play-button').remove();
 
-                content('.preview-images img').each(function () {
-                    content(this).removeAttr('data-src');
-                    content(this).attr('src', content(this).parent().attr('href'));
+                content('.preview-images img').each((_, el) => {
+                    content(el).removeAttr('data-src');
+                    content(el).attr('src', content(el).parent().attr('href'));
                 });
 
                 item.category = content('.panel-block .value a')

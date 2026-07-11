@@ -14,7 +14,7 @@ import { renderDescription } from './templates/description';
 
 export const handler = async (ctx: Context): Promise<Data> => {
     const { filter } = ctx.req.param();
-    const limit: number = Number.parseInt(ctx.req.query('limit') ?? '2', 10);
+    const limit = Number(ctx.req.query('limit') ?? '2');
 
     const baseUrl = 'https://kpopping.com';
     const targetUrl: string = new URL(`news${filter ? `/${filter}` : ''}`, baseUrl).href;
@@ -23,9 +23,7 @@ export const handler = async (ctx: Context): Promise<Data> => {
     const $: CheerioAPI = load(response);
     const language = $('html').attr('lang') ?? 'en';
 
-    let items: DataItem[] = [];
-
-    items = $('section.news-list-item')
+    let items: DataItem[] = $('section.news-list-item')
         .slice(0, limit)
         .toArray()
         .map((el): Element => {
@@ -52,12 +50,12 @@ export const handler = async (ctx: Context): Promise<Data> => {
 
             const processedItem: DataItem = {
                 title,
-                pubDate: pubDateStr ? timezone(parseDate(pubDateStr, 'MMM D, YYYY h:mma'), +8) : undefined,
+                pubDate: pubDateStr ? timezone(parseDate(pubDateStr, 'MMM D, YYYY h:mma'), 8) : undefined,
                 link: linkUrl ? new URL(linkUrl, baseUrl).href : undefined,
                 category: categories,
                 author: authors,
                 doi: $el.find('meta[name="citation_doi"]').attr('content'),
-                updated: upDatedStr ? timezone(parseDate(upDatedStr, 'MMM D, YYYY h:mma'), +8) : undefined,
+                updated: upDatedStr ? timezone(parseDate(upDatedStr, 'MMM D, YYYY h:mma'), 8) : undefined,
                 language,
             };
 
@@ -154,8 +152,7 @@ export const route: Route = {
     },
     description: `::: tip
 If you subscribe to [All male articles](https://kpopping.com/news/gender-male/category-all/idol-any/group-any/order)，where the URL is \`https://kpopping.com/news/gender-male/category-all/idol-any/group-any/order\`, extract the part \`https://kpopping.com/news\` to the end, which is \`gender-male/category-all/idol-any/group-any/order\`, and use it as the parameter to fill in. Therefore, the route will be [\`/kpopping/news/gender-male/category-all/idol-any/group-any/order\`](https://rsshub.app/kpopping/news/gender-male/category-all/idol-any/group-any/order).
-:::
-`,
+:::`,
     categories: ['new-media'],
     features: {
         requireConfig: false,
@@ -190,7 +187,6 @@ If you subscribe to [All male articles](https://kpopping.com/news/gender-male/ca
         },
         description: `::: tip
 若订阅 [All male articles](https://kpopping.com/news/gender-male/category-all/idol-any/group-any/order)，网址为 \`https://kpopping.com/news/gender-male/category-all/idol-any/group-any/order\`，请截取 \`https://kpopping.com/news/\` 到末尾的部分 \`gender-male/category-all/idol-any/group-any/order\` 作为 \`filter\` 参数填入，此时目标路由为 [\`/kpopping/news/gender-male/category-all/idol-any/group-any/order\`](https://rsshub.app/kpopping/news/gender-male/category-all/idol-any/group-any/order)。
-:::
-`,
+:::`,
     },
 };

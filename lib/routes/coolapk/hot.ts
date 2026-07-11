@@ -5,6 +5,7 @@ import utils from './utils';
 
 const getLinkAndTitle = (type, period): { link: string; title: string } => {
     const baseURL = 'https://api.coolapk.com/v6/page/dataList?url=';
+    const res = {};
     let link;
     const types = {
         jrrm: {
@@ -38,6 +39,11 @@ const getLinkAndTitle = (type, period): { link: string; title: string } => {
         },
     };
 
+    if (type === 'jrrm') {
+        res.link = types.jrrm.url;
+        res.title = types.jrrm.title;
+        return res;
+    }
     const periods = {
         daily: {
             description: '日榜',
@@ -119,7 +125,7 @@ export const route: Route = {
   | period   | daily | weekly |
 
   :::tip
-  今日热门没有周榜，酷图榜日榜的参数会变成周榜，周榜的参数会变成月榜。
+今日热门没有周榜，酷图榜日榜的参数会变成周榜，周榜的参数会变成月榜。
   :::`,
 };
 

@@ -43,7 +43,7 @@ const checkLogin = async (cookieJar) => {
     //     cache.set('instagram:wwwClaimV2', wwwClaimV2);
     // }
 
-    return Boolean(response.status === 'ok');
+    return response.status === 'ok';
 };
 
 const getUserInfo = async (username, cookieJar) => {
@@ -154,7 +154,7 @@ const renderGuestItems = (items) => {
         const type = node.__typename;
         const summary = node.edge_media_to_caption.edges[0]?.node.text ?? '';
 
-        let description = '';
+        let description: string;
         switch (type) {
             // carousel, can include GraphVideo and GraphImage
             case 'GraphSidecar':
@@ -185,7 +185,7 @@ const renderGuestItems = (items) => {
         }
 
         return {
-            title: summary.split('\n')[0],
+            title: summary.split('\n', 1)[0],
             id: node.id,
             pubDate: parseDate(node.taken_at_timestamp, 'X'),
             author: node.owner.username,

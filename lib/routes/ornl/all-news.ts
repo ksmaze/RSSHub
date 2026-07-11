@@ -12,7 +12,7 @@ import { parseDate } from '@/utils/parse-date';
 import { renderDescription } from './templates/description';
 
 export const handler = async (ctx: Context): Promise<Data> => {
-    const limit: number = Number.parseInt(ctx.req.query('limit') ?? '10', 10);
+    const limit = Number(ctx.req.query('limit') ?? '10');
 
     const baseUrl = 'https://www.ornl.gov';
     const targetUrl: string = new URL('all-news', baseUrl).href;
@@ -21,9 +21,7 @@ export const handler = async (ctx: Context): Promise<Data> => {
     const $: CheerioAPI = load(response);
     const language = $('html').attr('lang') ?? 'en';
 
-    let items: DataItem[] = [];
-
-    items = $('div.view-rows-main div.list-item-wrapper')
+    let items: DataItem[] = $('div.view-rows-main div.list-item-wrapper')
         .slice(0, limit)
         .toArray()
         .map((el): Element => {

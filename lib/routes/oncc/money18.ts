@@ -1,7 +1,7 @@
 import { load } from 'cheerio';
 import dayjs from 'dayjs';
 
-import type { Route } from '@/types';
+import type { DataItem, Route } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
 import { parseDate } from '@/utils/parse-date';
@@ -54,11 +54,11 @@ async function handler(ctx) {
 
     const toApiUrl = (date) => `${rootUrl}/cnt/utf8/content/${date}/articleList/list_${id}_all.js`;
 
-    let apiUrl = id === 'ipo' ? ipoApiUrl : id === 'industry' ? industryApiUrl : toApiUrl(dayjs().format('YYYYMMDD')),
-        hasArticle = false,
-        items = [],
-        i = 0,
-        response;
+    let apiUrl = id === 'ipo' ? ipoApiUrl : id === 'industry' ? industryApiUrl : toApiUrl(dayjs().format('YYYYMMDD'));
+    let hasArticle = false;
+    let items: DataItem[];
+    let i = 0;
+    let response;
 
     /* eslint-disable no-await-in-loop */
 
@@ -88,7 +88,7 @@ async function handler(ctx) {
                 images: item.hasHdPhoto ? [`https://hk.on.cc/hk/bkn${item.hdEnlargeThumbnail}`] : undefined,
                 description: item.content,
             }),
-            pubDate: timezone(parseDate(item.pubDate), +8),
+            pubDate: timezone(parseDate(item.pubDate), 8),
         }));
     } else if (id === 'industry') {
         items = response.data.articles.slice(0, limit).map((item) => ({
@@ -96,14 +96,14 @@ async function handler(ctx) {
             author: item.authorname,
             link: `${rootUrl}/finnews/content/${id}/${item.articleId}.html`,
             category: item.sector.map((s) => s.name),
-            pubDate: timezone(parseDate(item.pubDate), +8),
+            pubDate: timezone(parseDate(item.pubDate), 8),
         }));
     } else {
         items = response.data.slice(0, limit).map((item) => ({
             title: item.title,
             author: item.authorname,
             link: `${rootUrl}/finnews/content/${id}/${item.articleId}.html`,
-            pubDate: timezone(parseDate(item.pubDate), +8),
+            pubDate: timezone(parseDate(item.pubDate), 8),
         }));
     }
 

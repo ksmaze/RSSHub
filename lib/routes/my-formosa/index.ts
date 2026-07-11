@@ -30,11 +30,10 @@ export const route: Route = {
     url: 'my-formosa.com',
 };
 
-function fetch(url) {
-    return ofetch(url, { responseType: 'arrayBuffer' }).then((raw) => {
-        const decoder = new TextDecoder('big5');
-        return decoder.decode(raw);
-    });
+async function fetch(url) {
+    const raw = await ofetch(url, { responseType: 'arrayBuffer' });
+    const decoder = new TextDecoder('big5');
+    return decoder.decode(raw);
 }
 
 async function handler() {
@@ -57,14 +56,14 @@ async function handler() {
                     const res = await fetch(link);
                     const $ = load(res);
 
-                    const isTV = /^\/TV/.test(new URL(link).pathname);
+                    const isTV = new URL(link).pathname.startsWith('/TV');
 
                     return {
                         title,
                         link,
                         author: $('.page-header~#featured-news h4').text(),
                         category: $("meta[name='keywords']").attr('content').split(',').filter(Boolean),
-                        pubDate: timezone(parseDate((isTV ? $('.icon-calendar')[0].next.data : $('.date').text()).trim()), +8),
+                        pubDate: timezone(parseDate((isTV ? $('.icon-calendar')[0].next.data : $('.date').text()).trim()), 8),
                         description: (isTV ? $('.post-item').html() : $('.body').html()).replaceAll(/\/News.*?\.jpg/g, (match) => `http://my-formosa.com${match}`),
                     };
                 });

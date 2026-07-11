@@ -10,7 +10,7 @@ import ofetch from '@/utils/ofetch';
 import { parseDate } from '@/utils/parse-date';
 
 export const handler = async (ctx: Context): Promise<Data> => {
-    const limit: number = Number.parseInt(ctx.req.query('limit') ?? '30', 10);
+    const limit = Number(ctx.req.query('limit') ?? '30');
 
     const baseUrl = 'https://www.python.org';
     const targetUrl: string = new URL('downloads', baseUrl).href;
@@ -19,9 +19,7 @@ export const handler = async (ctx: Context): Promise<Data> => {
     const $: CheerioAPI = load(response);
     const language = $('html').attr('lang') ?? 'en';
 
-    let items: DataItem[] = [];
-
-    items = $('div.active-release-list-widget ol.list-row-container li')
+    let items: DataItem[] = $('div.active-release-list-widget ol.list-row-container li')
         .slice(0, limit)
         .toArray()
         .map((el): Element => {

@@ -36,7 +36,8 @@ async function handler(ctx) {
     const limit = Number.parseInt(ctx.req.query('limit')) || 12;
 
     const link = getLink(category);
-    const $ = load(await get(link));
+    const html = await get(link);
+    const $ = load(html);
     const title = $('head>title').text();
     const description = $('head>meta[name="description"]').attr('content');
     const image = $('head>link[rel="apple-touch-icon"]').attr('href');
@@ -61,7 +62,7 @@ async function handler(ctx) {
         const link = `https://www.gcores.com/radios/${id}`;
         const itunes_item_image = `https://image.gcores.com/${attributes.cover}`;
         const media_id = relationships.media.data.id;
-        const enclosure_url = new URL(audios[media_id], 'https://alioss.gcores.com/uploads/audio/').toString();
+        const enclosure_url = new URL(audios[media_id], 'https://alioss.gcores.com/uploads/audio/').href;
         const description = renderContentDescription(JSON.parse(attributes.content));
 
         return {

@@ -16,7 +16,7 @@ const baseUrl = `https://${domain}`;
 
 export const handler = async (ctx: Context): Promise<Data> => {
     const { category = 'gndy/dyzz' } = ctx.req.param();
-    const limit: number = Number.parseInt(ctx.req.query('limit') ?? '25', 10);
+    const limit = Number(ctx.req.query('limit') ?? '25');
 
     const targetUrl: string = new URL(`html/${category.replace(/^html\//, '')}`, baseUrl).href;
 
@@ -26,9 +26,7 @@ export const handler = async (ctx: Context): Promise<Data> => {
     const $: CheerioAPI = load(iconv.decode(Buffer.from(response), 'gb2312'));
     const language = $('html').attr('lang') ?? 'zh-CN';
 
-    let items: DataItem[] = [];
-
-    items = $('div.co_content8 ul table')
+    let items: DataItem[] = $('div.co_content8 ul table')
         .slice(0, limit)
         .toArray()
         .map((el): Element => {
@@ -45,14 +43,14 @@ export const handler = async (ctx: Context): Promise<Data> => {
             const processedItem: DataItem = {
                 title,
                 description,
-                pubDate: pubDateStr ? timezone(parseDate(pubDateStr), +8) : undefined,
+                pubDate: pubDateStr ? timezone(parseDate(pubDateStr), 8) : undefined,
                 link: linkUrl ? new URL(linkUrl, baseUrl).href : undefined,
                 doi: $el.find('meta[name="citation_doi"]').attr('content'),
                 content: {
                     html: description,
                     text: description,
                 },
-                updated: upDatedStr ? timezone(parseDate(upDatedStr), +8) : undefined,
+                updated: upDatedStr ? timezone(parseDate(upDatedStr), 8) : undefined,
                 language,
             };
 

@@ -11,7 +11,7 @@ import ofetch from '@/utils/ofetch';
 import { parseDate } from '@/utils/parse-date';
 
 export const handler = async (ctx: Context): Promise<Data> => {
-    const limit: number = Number.parseInt(ctx.req.query('limit') ?? '30', 10);
+    const limit = Number(ctx.req.query('limit') ?? '30');
 
     const baseUrl = 'https://mathpix.com';
     const targetUrl: string = new URL('blog', baseUrl).href;
@@ -33,9 +33,7 @@ export const handler = async (ctx: Context): Promise<Data> => {
         }
     });
 
-    let items: DataItem[] = [];
-
-    items = $('li.articles__item')
+    let items: DataItem[] = $('li.articles__item')
         .slice(0, limit)
         .toArray()
         .map((el): Element => {

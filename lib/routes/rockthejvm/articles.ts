@@ -12,7 +12,7 @@ import { parseDate } from '@/utils/parse-date';
 import { renderDescription } from './templates/description';
 
 export const handler = async (ctx: Context): Promise<Data> => {
-    const limit: number = Number.parseInt(ctx.req.query('limit') ?? '30', 10);
+    const limit = Number(ctx.req.query('limit') ?? '30');
 
     const baseUrl = 'https://rockthejvm.com';
     const targetUrl: string = new URL('articles/1', baseUrl).href;
@@ -23,9 +23,7 @@ export const handler = async (ctx: Context): Promise<Data> => {
 
     $('footer').remove();
 
-    let items: DataItem[] = [];
-
-    items = $('h2')
+    let items: DataItem[] = $('h2')
         .slice(0, limit)
         .toArray()
         .map((el): Element => {

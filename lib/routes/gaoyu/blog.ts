@@ -12,7 +12,7 @@ import { parseDate } from '@/utils/parse-date';
 import { renderDescription } from './templates/description';
 
 export const handler = async (ctx: Context): Promise<Data> => {
-    const limit: number = Number.parseInt(ctx.req.query('limit') ?? '20', 10);
+    const limit = Number(ctx.req.query('limit') ?? '20');
 
     const baseUrl = 'https://www.gaoyu.me';
     const targetUrl: string = new URL('blog', baseUrl).href;
@@ -29,9 +29,7 @@ export const handler = async (ctx: Context): Promise<Data> => {
         },
     ];
 
-    let items: DataItem[] = [];
-
-    items = $('a.flex-col')
+    let items: DataItem[] = $('a.flex-col')
         .slice(0, limit)
         .toArray()
         .map((el): Element => {

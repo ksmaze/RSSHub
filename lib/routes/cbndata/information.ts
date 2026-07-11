@@ -12,7 +12,7 @@ import { renderDescription } from './templates/description';
 
 export const handler = async (ctx: Context): Promise<Data> => {
     const { id = 'all' } = ctx.req.param();
-    const limit: number = Number.parseInt(ctx.req.query('limit') ?? '50', 10);
+    const limit = Number(ctx.req.query('limit') ?? '50');
 
     const baseUrl = 'https://www.cbndata.com';
     const targetUrl: string = new URL(`information?tag_id=${id}`, baseUrl).href;
@@ -29,9 +29,7 @@ export const handler = async (ctx: Context): Promise<Data> => {
         },
     });
 
-    let items: DataItem[] = [];
-
-    items = response.data.slice(0, limit).map((item): DataItem => {
+    let items: DataItem[] = response.data.slice(0, limit).map((item): DataItem => {
         const title: string = item.title;
         const image: string | undefined = item.image;
         const description: string | undefined = renderDescription({
@@ -199,8 +197,7 @@ export const route: Route = {
 | [美妆个护](https://www.cbndata.com/information?tag_id=1)    | [1](https://rsshub.app/cbndata/information/1)       |
 | [服饰鞋包](https://www.cbndata.com/information?tag_id=2559) | [2559](https://rsshub.app/cbndata/information/2559) |
 | [宠物](https://www.cbndata.com/information?tag_id=2419)     | [2419](https://rsshub.app/cbndata/information/2419) |
-| [营销](https://www.cbndata.com/information?tag_id=2484)     | [2484](https://rsshub.app/cbndata/information/2484) |
-`,
+| [营销](https://www.cbndata.com/information?tag_id=2484)     | [2484](https://rsshub.app/cbndata/information/2484) |`,
     categories: ['new-media'],
     features: {
         requireConfig: false,

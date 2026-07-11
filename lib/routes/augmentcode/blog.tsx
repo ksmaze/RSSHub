@@ -31,7 +31,7 @@ const renderDescription = ({ images, description }: { images?: DescriptionImage[
     );
 
 export const handler = async (ctx: Context): Promise<Data> => {
-    const limit: number = Number.parseInt(ctx.req.query('limit') ?? '50', 10);
+    const limit = Number(ctx.req.query('limit') ?? '50');
 
     const baseUrl = 'https://augmentcode.com';
     const targetUrl: string = new URL('blog', baseUrl).href;
@@ -40,9 +40,7 @@ export const handler = async (ctx: Context): Promise<Data> => {
     const $: CheerioAPI = load(response);
     const language = $('html').attr('lang') ?? 'en';
 
-    let items: DataItem[] = [];
-
-    items = $('div[data-slot="card"]')
+    let items: DataItem[] = $('div[data-slot="card"]')
         .slice(0, limit)
         .toArray()
         .map((el): Element => {

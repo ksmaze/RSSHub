@@ -4,6 +4,7 @@ import timezone from 'dayjs/plugin/timezone.js';
 import utc from 'dayjs/plugin/utc.js';
 import { raw } from 'hono/html';
 import { renderToString } from 'hono/jsx/dom/server';
+import type { JSX } from 'hono/jsx/jsx-runtime';
 import { FetchError } from 'ofetch';
 
 import type { Route } from '@/types';
@@ -34,14 +35,15 @@ export const route: Route = {
     ],
     handler,
     description: `::: tip
-For example, the category for https://www.washingtonpost.com/national/investigations would be /national/investigations.
+For example, the category for <https://www.washingtonpost.com/national/investigations> would be /national/investigations.
 :::`,
 };
 
 function handleDuplicates(array) {
     const objects = {};
     for (const obj of array) {
-        objects[obj.id] = objects[obj.id] ? Object.assign(objects[obj.id], obj) : obj;
+        const existing = objects[obj.id];
+        objects[obj.id] = existing ? Object.assign(existing, obj) : obj;
     }
     return Object.values(objects);
 }
@@ -90,9 +92,8 @@ async function handler(ctx) {
                     if (error instanceof FetchError && error.statusCode === 415) {
                         // Interactive or podcast contents will return 415 Unsupported Media Type. Keep calm and carry on.
                         return item;
-                    } else {
-                        throw error;
                     }
+                    throw error;
                 }
                 item.title = response.data.title ?? item.title;
                 item.author =
@@ -145,9 +146,7 @@ const renderDescription = (content): string =>
                             </SubheadTag>
                         );
                     }
-                }
-
-                if (entry.type === 'deck') {
+                } else if (entry.type === 'deck') {
                     return (
                         <blockquote key={`deck-${index}`}>
                             <p>{entry.mime === 'text/html' ? raw(entry.content) : entry.content}</p>
@@ -179,9 +178,7 @@ const renderDescription = (content): string =>
                             </figure>
                         );
                     }
-                }
-
-                if (entry.type === 'list') {
+                } else if (entry.type === 'list') {
                     const ListTag = entry.subtype === 'ordered' ? 'ol' : 'ul';
                     return (
                         <ListTag key={`list-${index}`}>

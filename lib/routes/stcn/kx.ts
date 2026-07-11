@@ -10,7 +10,7 @@ import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
 export const handler = async (ctx: Context): Promise<Data> => {
-    const limit: number = Number.parseInt(ctx.req.query('limit') ?? '30', 10);
+    const limit = Number(ctx.req.query('limit') ?? '30');
 
     const baseUrl = 'https://www.stcn.com';
     const targetUrl: string = new URL('article/list/kx.html', baseUrl).href;
@@ -30,9 +30,7 @@ export const handler = async (ctx: Context): Promise<Data> => {
     const $: CheerioAPI = load(targetResponse);
     const language = $('html').attr('lang') ?? 'zh-CN';
 
-    let items: DataItem[] = [];
-
-    items = response.data.slice(0, limit).map((item): DataItem => {
+    let items: DataItem[] = response.data.slice(0, limit).map((item): DataItem => {
         const title: string = item.title;
         const description: string = item.content;
         const pubDate: number | string = item.time;
@@ -83,14 +81,14 @@ export const handler = async (ctx: Context): Promise<Data> => {
                     const processedItem: DataItem = {
                         title,
                         description,
-                        pubDate: pubDateStr ? timezone(parseDate(pubDateStr), +8) : item.pubDate,
+                        pubDate: pubDateStr ? timezone(parseDate(pubDateStr), 8) : item.pubDate,
                         category: categories,
                         author: authors,
                         content: {
                             html: description,
                             text: description,
                         },
-                        updated: upDatedStr ? timezone(parseDate(upDatedStr), +8) : item.updated,
+                        updated: upDatedStr ? timezone(parseDate(upDatedStr), 8) : item.updated,
                         language,
                     };
 
@@ -110,7 +108,7 @@ export const handler = async (ctx: Context): Promise<Data> => {
         item: items,
         allowEmpty: true,
         image: $('img.stcn-logo').attr('src'),
-        author: $('meta[name="keywords"]').attr('content')?.split(/,/)[0],
+        author: $('meta[name="keywords"]').attr('content')?.split(/,/, 1)[0],
         language,
         id: targetUrl,
     };

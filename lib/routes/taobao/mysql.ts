@@ -10,7 +10,7 @@ import ofetch from '@/utils/ofetch';
 import { parseDate } from '@/utils/parse-date';
 
 export const handler = async (ctx: Context): Promise<Data> => {
-    const limit: number = Number.parseInt(ctx.req.query('limit') ?? '30', 10);
+    const limit = Number(ctx.req.query('limit') ?? '30');
 
     const baseUrl = 'http://mysql.taobao.org';
     const targetUrl: string = new URL('monthly/', baseUrl).href;
@@ -19,10 +19,9 @@ export const handler = async (ctx: Context): Promise<Data> => {
     const $: CheerioAPI = load(response);
     const language = $('html').attr('lang') ?? 'zh';
 
-    let items: DataItem[] = [];
     let count = 0;
 
-    items = await Promise.all(
+    let items: DataItem[] = await Promise.all(
         $('h3 a.main')
             .toArray()
             .map(async (monthlyEl): Promise<Element[] | undefined> => {

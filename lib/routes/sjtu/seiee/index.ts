@@ -82,7 +82,7 @@ async function handler(ctx) {
                             .trim()
                             .match(/日期：([\d-]+) /)[1]
                     ),
-                    +8
+                    8
                 );
 
                 return item;
@@ -90,8 +90,9 @@ async function handler(ctx) {
         )
     );
 
+    const fallbackHtml = await ofetch(currentUrl);
     return {
-        title: $('title').text() || load(await ofetch(currentUrl))('title').text(),
+        title: $('title').text() || load(fallbackHtml)('title').text(),
         link: currentUrl,
         item: items,
     };

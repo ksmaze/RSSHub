@@ -27,14 +27,15 @@ export const route: Route = {
     name: 'chapter',
     maintainers: ['huangliangshusheng'],
     handler,
-    description: `Eg: [https://syosetu.org/novel/264928](https://syosetu.org/novel/264928)`,
+    description: 'Eg: <https://syosetu.org/novel/264928>',
 };
 
 async function handler(ctx) {
     const id = ctx.req.param('id');
     const limit = Number.parseInt(ctx.req.query('limit')) || 5;
     const link = `https://syosetu.org/novel/${id}`;
-    const $ = load(await get(link));
+    const html = await get(link);
+    const $ = load(html);
 
     const title = $('span[itemprop="name"]').text();
     const description = $('div.ss:nth-child(2)').text();
@@ -47,17 +48,18 @@ async function handler(ctx) {
             return {
                 title: chapter_link.text(),
                 link: chapter_link.attr('href'),
-                pubDate: timezone(parseDate($_chapter.find('nobr').text(), 'YYYYMMDD HH:mm'), +9),
+                pubDate: timezone(parseDate($_chapter.find('nobr').text(), 'YYYYMMDD HH:mm'), 9),
             };
         })
-        .toSorted((a, b) => (a.pubDate <= b.pubDate ? 1 : -1))
+        .toSorted((a, b) => b.pubDate - a.pubDate)
         .slice(0, limit);
 
     const item_list = await Promise.all(
         chapter_list.map((chapter) => {
             chapter.link = `${link}/${chapter.link}`;
             return cache.tryGet(chapter.link, async () => {
-                const content = load(await get(chapter.link));
+                const html = await get(chapter.link);
+                const content = load(html);
                 chapter.description = content('#honbun').html();
                 return chapter;
             });

@@ -120,7 +120,7 @@ async function handler(ctx) {
 
                 const content = load(detailResponse.data);
 
-                let head = {};
+                let head: Record<string, unknown>;
                 try {
                     head = JSON.parse(content('script[type="application/ld+json"]').first().text());
                 } catch {
@@ -132,7 +132,7 @@ async function handler(ctx) {
                 item.title = content('h1').text();
                 item.author = head?.author?.name || content('meta[name="author"]').attr('content');
                 item.category = [content('meta[property="article:section"]').attr('content'), ...content('meta[name="news_keywords"]').attr('content').split(',')];
-                item.pubDate = timezone(parseDate(content('meta[property="article:published_time"]').attr('content')), +8);
+                item.pubDate = timezone(parseDate(content('meta[property="article:published_time"]').attr('content')), 8);
                 item.description = content('article, .content-p').html();
 
                 return item;

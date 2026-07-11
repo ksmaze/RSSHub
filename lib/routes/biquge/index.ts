@@ -51,7 +51,7 @@ async function handler(ctx) {
 
     const $ = load(iconv.decode(response.data, encoding));
     const author = $('meta[property="og:novel:author"]').attr('content');
-    const pubDate = timezone(parseDate($('meta[property="og:novel:update_time"]').attr('content')), +8);
+    const pubDate = timezone(parseDate($('meta[property="og:novel:update_time"]').attr('content')), 8);
 
     let items = $('dl dd a')
         .toArray()
@@ -60,11 +60,11 @@ async function handler(ctx) {
         .map((item) => {
             item = $(item);
 
-            let link = '';
+            let link: string;
             const url = item.attr('href');
             if (url.startsWith('http')) {
                 link = url;
-            } else if (/^\//.test(url)) {
+            } else if (url.startsWith('/')) {
                 link = `${rootUrl}${url}`;
             } else {
                 link = `${currentUrl}/${url}`;

@@ -56,7 +56,7 @@ async function handler() {
             return {
                 title: $item.find('.btt-4').text().trim(),
                 link,
-                pubDate: timezone(parseDate(dateStr, 'YYYY-MM-DD'), +8),
+                pubDate: timezone(parseDate(dateStr, 'YYYY-MM-DD'), 8),
             };
         });
 
@@ -71,15 +71,15 @@ async function handler() {
                 } else {
                     const $content = $('.wp_articlecontent');
                     // Convert wp_pdf_player iframes to download links
-                    $content.find('.wp_pdf_player').each(function () {
-                        const $iframe = $(this);
+                    $content.find('.wp_pdf_player').each((_, el) => {
+                        const $iframe = $(el);
                         const pdfSrc = $iframe.attr('pdfsrc') || '';
                         const pdfUrl = pdfSrc.startsWith('http') ? pdfSrc : new URL(pdfSrc, host).href;
                         $iframe.replaceWith(`<p><a href="${pdfUrl}">附件下载</a></p>`);
                     });
                     // Fix relative URLs
-                    $content.find('a').each(function () {
-                        const $a = $(this);
+                    $content.find('a').each((_, el) => {
+                        const $a = $(el);
                         const href = $a.attr('href');
                         if (href && !href.startsWith('http')) {
                             $a.attr('href', new URL(href, host).href);
@@ -92,7 +92,7 @@ async function handler() {
                     }
                     const dateText = $('.arti_update').text().replace('发布时间：', '').trim();
                     if (dateText) {
-                        item.pubDate = timezone(parseDate(dateText, 'YYYY-MM-DD'), +8);
+                        item.pubDate = timezone(parseDate(dateText, 'YYYY-MM-DD'), 8);
                     }
                 }
 

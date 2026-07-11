@@ -12,7 +12,7 @@ import timezone from '@/utils/timezone';
 import { renderDescription } from './templates/description';
 
 export const handler = async (ctx: Context): Promise<Data> => {
-    const limit: number = Number.parseInt(ctx.req.query('limit') ?? '50', 10);
+    const limit = Number(ctx.req.query('limit') ?? '50');
 
     const baseUrl = 'https://www.eeo.com.cn';
     const apiUrl = 'https://app.eeo.com.cn';
@@ -34,9 +34,7 @@ export const handler = async (ctx: Context): Promise<Data> => {
     const $: CheerioAPI = load(targetResponse);
     const language = $('html').attr('lang') ?? 'en';
 
-    let items: DataItem[] = [];
-
-    items = response.data.slice(0, limit).map((item): DataItem => {
+    let items: DataItem[] = response.data.slice(0, limit).map((item): DataItem => {
         const title: string = item.title;
         const description: string | undefined = renderDescription({
             intro: item.description,
@@ -53,7 +51,7 @@ export const handler = async (ctx: Context): Promise<Data> => {
         const processedItem: DataItem = {
             title,
             description,
-            pubDate: pubDate ? timezone(parseDate(pubDate), +8) : undefined,
+            pubDate: pubDate ? timezone(parseDate(pubDate), 8) : undefined,
             link: linkUrl,
             category: categories,
             author: authors,
@@ -65,7 +63,7 @@ export const handler = async (ctx: Context): Promise<Data> => {
             },
             image,
             banner: image,
-            updated: updated ? timezone(parseDate(updated), +8) : undefined,
+            updated: updated ? timezone(parseDate(updated), 8) : undefined,
             language,
         };
 
@@ -95,13 +93,13 @@ export const handler = async (ctx: Context): Promise<Data> => {
                 const processedItem: DataItem = {
                     title,
                     description,
-                    pubDate: pubDateStr ? timezone(parseDate(pubDateStr), +8) : item.pubDate,
+                    pubDate: pubDateStr ? timezone(parseDate(pubDateStr), 8) : item.pubDate,
                     author: authors,
                     content: {
                         html: description,
                         text: description,
                     },
-                    updated: upDatedStr ? timezone(parseDate(upDatedStr), +8) : item.updated,
+                    updated: upDatedStr ? timezone(parseDate(upDatedStr), 8) : item.updated,
                     language,
                 };
 
