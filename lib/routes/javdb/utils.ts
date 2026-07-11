@@ -1,13 +1,13 @@
-import cache from '@/utils/cache';
 import { load } from 'cheerio';
-import { parseDate } from '@/utils/parse-date';
-import { config } from '@/config';
 
+import { config } from '@/config';
 import ConfigNotFoundError from '@/errors/types/config-not-found';
+import type { DataItem } from '@/types';
+import cache from '@/utils/cache';
 import { manager } from '@/utils/cookie-cloud';
-import { DataItem } from '@/types';
-import { getFlareSolverrSession } from '@/utils/flaresolverr';
 import logger from '@/utils/logger';
+import { parseDate } from '@/utils/parse-date';
+import { scrapeGet } from '@/utils/trawl';
 
 const allowDomain = new Set(['javdb.com', 'javdb36.com', 'javdb007.com', 'javdb521.com']);
 
@@ -22,9 +22,8 @@ const ProcessItems = async (ctx, currentUrl, title) => {
     const rootUrl = `https://${domain}`;
     logger.info(`go to url: ${url.href}`);
 
-    const session = await getFlareSolverrSession();
     try {
-        const { content: listHtml } = await session.get(url.href, { cookieJar: manager.cookieJar });
+        const { content: listHtml } = await scrapeGet(url.href, { cookieJar: manager.cookieJar });
         const $ = load(listHtml);
 
         $('.tags, .tag-can-play, .over18-modal').remove();
@@ -48,7 +47,7 @@ const ProcessItems = async (ctx, currentUrl, title) => {
         for (const item of baseItems) {
             // eslint-disable-next-line no-await-in-loop
             const detailItem = (await cache.tryGet(item.link as string, async () => {
-                const { content: detailHtml } = await session.get(item.link as string, { cookieJar: manager.cookieJar });
+                const { content: detailHtml } = await scrapeGet(item.link as string, { cookieJar: manager.cookieJar });
                 const content = load(detailHtml);
 
                 item.enclosure_type = 'application/x-bittorrent';
@@ -82,8 +81,6 @@ const ProcessItems = async (ctx, currentUrl, title) => {
     } catch (error) {
         logger.error(`Error while processing JavDB route ${url.href}`, error);
         throw error;
-    } finally {
-        await session.destroy();
     }
 };
 
