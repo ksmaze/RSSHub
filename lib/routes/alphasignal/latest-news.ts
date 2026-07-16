@@ -82,7 +82,7 @@ export const handler = async (): Promise<Data> => {
         },
         body: {
             page: 1,
-            limit: 20,
+            limit: 12,
             sort: 'latest',
             timeframe: 'latest',
         },
