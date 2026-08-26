@@ -2,7 +2,7 @@
 
 ## Build & Test
 
-- **Build**: `pnpm build` from the project root. This is the canonical way to verify code compiles correctly (handles path aliases, JSX, etc.). Do NOT use `npx tsc` or `npx tsc --noEmit` — it is slow on the full project and `pnpm build` already catches compilation errors.
+- **Build**: `pnpm build` from the project root. This is the canonical way to verify code compiles correctly (handles path aliases, JSX, etc.). Do NOT use `npx tsc`, `npx tsc --noEmit`, `pnpm typecheck`, `pnpm build:route` — it is slow on the full project and `pnpm build` already catches compilation errors.
 - **Apply compose config changes** (ports, volumes, image, env): `docker-compose up -d --remove-orphans`. Compose diffs running state against the YAML and only recreates containers whose config changed.
 - **Restart after code/build changes** (mounted volume contents changed): `docker-compose restart rsshub` (or any specific service). Compose does NOT detect file content changes inside mounts.
 - **Verify routes**: After stack is up, fetch from the RSSHub endpoint. For example, `lib/routes/x1080x/forum.tsx` serves `http://localhost:13828/x1080x/forum/263`.
